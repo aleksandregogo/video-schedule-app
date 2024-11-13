@@ -1,0 +1,32 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5433
+      DATABASE_USER: kukumala
+      DATABASE_PASSWORD: abduljabarkhani
+      DATABASE_NAME: mvp-db
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules 
+  db:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: kukumala
+      POSTGRES_PASSWORD: abduljabarkhani
+      POSTGRES_DB: mvp-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
