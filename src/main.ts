@@ -8,6 +8,7 @@ import { HttpExceptionFilter } from './Common/Filters/http-exception.filter';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UserModule } from './Modules/User/user.module';
+import { AuthModule } from './auth/auth.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -29,7 +30,8 @@ async function bootstrap() {
   try {
     const document = SwaggerModule.createDocument(app, options, {
       include: [
-        UserModule
+        UserModule,
+        AuthModule
       ],
     });
 

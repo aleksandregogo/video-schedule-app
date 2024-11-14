@@ -11,7 +11,8 @@ import { UserModule } from './Modules/User/user.module';
   imports: [
     TypeOrmModule.forRootAsync(TypeormAsyncConfig),
     NestConfigModule.forRoot({ load: [appConfigFactory], isGlobal: true }),
-    UserModule
+    UserModule,
+    
   ],
   providers: [
     {
