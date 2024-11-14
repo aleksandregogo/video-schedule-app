@@ -8,7 +8,6 @@ export class UserPresentation {
 
         view.createdAt = user.createdAt;
         view.name = user.name;
-        view.type = user.type;
         return view;
     }
 }

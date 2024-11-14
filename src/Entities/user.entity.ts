@@ -1,11 +1,26 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity ,PrimaryGeneratedColumn} from "typeorm";
 import { Defentity } from "./defentity.entity";
 
-@Entity('user')
-export class User extends Defentity {
-  @Column({ type: "varchar", nullable: false })
+@Entity()
+export class User extends Defentity  {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
   name: string;
 
-  @Column({ type:"varchar", nullable: false, default: 'client' })
-  type: 'buisness' | 'client';
+  @Column()
+  personal_number: string;
+
+  @Column({ nullable: true })
+  facebook_id: string;
+
+  @Column({ nullable: true })
+  google_id: string;
+
+  @Column({ nullable: true })
+  email: string;
+
+  @Column({ nullable: true })
+  profile_picture: string;
 }

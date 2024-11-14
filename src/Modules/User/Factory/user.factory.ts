@@ -12,7 +12,6 @@ export class UserFactory {
     const user: User = new User();
 
     user.name = userCreateDto.name;
-    user.type = userCreateDto.type;
 
     return this.userRepository.save(user);
   }

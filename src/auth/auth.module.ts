@@ -6,8 +6,9 @@ import { GoogleStrategy } from './google.strategy';
 
 
 @Module({
-  imports: [PassportModule],
+  imports: [PassportModule.register({defaultStrategy: 'jwt'})],
   providers: [AuthService, GoogleStrategy],
   controllers: [AuthController],
+  exports: [PassportModule]
 })
 export class AuthModule {}

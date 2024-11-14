@@ -20,6 +20,7 @@ export const TypeormAsyncConfig: TypeOrmModuleAsyncOptions = {
       //   ca: readFileSync(appConfig.db.cert),
       // },
       entities: [User],
+      migrations: ['dist/Migrations/*.js'],
       migrationsRun: false,
       synchronize: false,
       logging: true,

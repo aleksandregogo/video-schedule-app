@@ -1,4 +1,4 @@
-import { Body, Controller, HttpException, HttpStatus, Post, Request, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, HttpException, HttpStatus, Post, Get, Request, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserCreateDto } from '../Dto/user.create.dto';
 import { UserService } from '../Services/user.service';
@@ -19,5 +19,12 @@ export class UserController {
     }, HttpStatus.BAD_REQUEST)
 
     return new UserPresentation().present(createdUser);
+  }
+
+  @Get('google')
+  async googleAuth(@Request() req) {
+    console.log('Google Auth route hit');
+    return '0k';
+    // This will trigger Google OAuth login
   }
 }
