@@ -6,13 +6,16 @@ import { HTTPLoggingInterceptor } from './Common/Interceptors/http-logger.interc
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeormAsyncConfig } from './Common/Config/typeorm.config';
 import { UserModule } from './Modules/User/user.module';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync(TypeormAsyncConfig),
     NestConfigModule.forRoot({ load: [appConfigFactory], isGlobal: true }),
     UserModule,
-    
+    ConfigModule.forRoot(),
+    AuthModule
   ],
   providers: [
     {
