@@ -1,21 +1,35 @@
 version: '3'
 services:
-  backend:
+  frontend:
     build:
-      context: .
+      context: ./Front
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    volumes:
+      - ./Front:/app
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./Back
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
     environment:
       DATABASE_HOST: db
       DATABASE_PORT: 5432
       DATABASE_USER: kukumala
       DATABASE_PASSWORD: abduljabarkhani
       DATABASE_NAME: mvp-db
+    volumes:
+      - ./Back:/app
     depends_on:
       - db
-    volumes:
-      - .:/app
+
   db:
     image: postgres:15
     ports:
