@@ -19,7 +19,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migration:generate" : "npm run typeorm:cli migration:generate -- src/Common/DB/Migrations/Migration -d src/Common/DB/data-source.ts",
+    "migration:run" : "npm run typeorm:cli migration:run -- -d ./src/Common/DB/data-source.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.2",
@@ -31,6 +33,7 @@
     "@nestjs/swagger": "^7.3.0",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.4.7",
+    "@types/passport-google-oauth20": "^2.0.16",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.5",

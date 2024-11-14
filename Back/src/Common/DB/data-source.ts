@@ -8,7 +8,7 @@ config({ path: configPath });
 
 const dataSource = new DataSource({
   type: 'postgres',
-  host: process.env.PG_DB_HOST,
+  host: 'localhost',
   port: 5433,
   username: process.env.PG_DB_USER,
   password: process.env.PG_DB_PASSWORD,
