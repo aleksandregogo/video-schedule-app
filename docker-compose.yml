@@ -16,7 +16,6 @@ services:
       - db
     volumes:
       - .:/app
-      - /app/node_modules 
   db:
     image: postgres:15
     ports:

@@ -21,6 +21,10 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
+  app.enableCors({
+    origin: "*"
+  });
+
   const options = new DocumentBuilder().setTitle('Gateway API').setVersion('1.0').addBearerAuth().build();
   try {
     const document = SwaggerModule.createDocument(app, options, {
