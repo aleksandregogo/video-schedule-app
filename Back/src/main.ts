@@ -9,11 +9,13 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UserModule } from './User/user.module';
 import { AuthModule } from './Auth/auth.module';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
+  app.use(cookieParser());
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api');
@@ -22,8 +24,17 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(origin => {
+    if (origin.includes('*')) {
+      const regexString = origin.replace(/\./g, '\\.').replace(/\*/g, '.*');
+      return new RegExp(`^${regexString}$`);
+    }
+    return origin;
+  });
+
   app.enableCors({
-    origin: "*"
+    origin: allowedOrigins,
+    credentials: true
   });
 
   const options = new DocumentBuilder().setTitle('Gateway API').setVersion('1.0').addBearerAuth().build();
