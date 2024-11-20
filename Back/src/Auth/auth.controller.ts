@@ -2,17 +2,17 @@ import { Controller, Get, UseGuards, Req, Res, HttpStatus } from "@nestjs/common
 import { AuthGuard } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
 import { Request, Response } from 'express';
-import { UserService } from "src/User/user.service";
 import { User } from "src/Entities/user.entity";
 import { AuthProvider } from "src/User/Interface/UserInfoInterface";
 import { SuccessResponseObjectDto } from "src/Response/SuccessResponseObject.dto";
 import { UserPresentation } from "src/User/Presentation/user.presentation";
+import { ConfigService } from "@nestjs/config";
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    private readonly configService: ConfigService
   ) {}
 
   @Get('google')
@@ -34,7 +34,7 @@ export class AuthController {
       path: '/',
     });
 
-    res.redirect('http://localhost:3000/dashboard');
+    res.redirect(this.configService.get('AUTH_SUCCESS_REDIRECT_URL'));
   }
 
   @Get('facebook')
@@ -56,7 +56,7 @@ export class AuthController {
       path: '/',
     });
 
-    res.redirect('http://localhost:3000/dashboard');
+    res.redirect(this.configService.get('AUTH_SUCCESS_REDIRECT_URL'));
   }
 
   @Get('user')

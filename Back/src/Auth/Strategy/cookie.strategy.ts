@@ -33,6 +33,10 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
         existingUser = await this.userService.findByGoogleId(payload.userProviderId);
       }
 
+      if (!existingUser) {
+        throw new UnauthorizedException();
+      }
+
       return payload;
     } catch (err) {
       console.log(err);

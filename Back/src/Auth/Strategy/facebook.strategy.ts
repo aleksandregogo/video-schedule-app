@@ -15,7 +15,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
       clientID: configService.get<string>('FACEBOOK_APP_ID'),
       clientSecret: configService.get<string>('FACEBOOK_APP_SECRET'),
       callbackURL: configService.get<string>('FACEBOOK_APP_REDIRECT_URL'),
-      profileFields: ['id', 'email', 'name', 'photos'], // Request specific fields
+      profileFields: ['id', 'email', 'name', 'photos'],
     });
   }
 
@@ -33,7 +33,6 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
       existingUser = await this.userService.create(user);
     }
 
-    // Return the user object
     done(null, existingUser);
   }
 }
