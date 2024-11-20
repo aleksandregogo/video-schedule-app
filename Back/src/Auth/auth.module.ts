@@ -23,7 +23,7 @@ import { CookieStrategy } from './Strategy/cookie.strategy';
   providers: [
     CookieStrategy,
     FacebookStrategy,
-    // GoogleStrategy,
+    GoogleStrategy,
     AuthService,
     UserService
   ],

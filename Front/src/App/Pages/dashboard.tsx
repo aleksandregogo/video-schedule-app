@@ -31,12 +31,10 @@ const Dashboard = () => {
       .get('http://localhost:5000/api/v1/auth/logout', {
         withCredentials: true,
       })
-      .then((response) => {
-        console.log('User Info:', response.data);
-      })
       .catch((err) => {
         console.error('Error fetching user info:', err);
-      });
+      })
+      .finally(() => navigate('/login'))
   }
 
   return <div>

@@ -15,7 +15,7 @@ export class User extends Defentity  {
   @Column({ nullable: true })
   profilePicture: string;
 
-  @Column()
+  @Column({ nullable: true })
   personalNumber: string;
 
   @Column({ nullable: true })

@@ -19,11 +19,19 @@ export class UserService {
   }
 
   async findByGoogleId(googleId: string): Promise<User | null> {
-    return this.userRepository.findOneOrFail({ where: { googleId: Equal(googleId) } });
+    return this.userRepository.findOneOrFail({ where: { googleId: Equal(googleId) } })
+      .catch((err) => {
+        console.log(err);
+        return null
+      })
   }
 
   async create(userData: Partial<User>): Promise<User> {
     const user = this.userRepository.create(userData);
-    return this.userRepository.save(user);
+    return this.userRepository.save(user)
+      .catch((err) => {
+        console.log(err);
+        return null
+      })
   }
 }
