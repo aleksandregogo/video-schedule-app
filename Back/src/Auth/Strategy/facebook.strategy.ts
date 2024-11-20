@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-facebook';
-import { AuthService } from '../auth.service';
 import { UserService } from 'src/User/user.service';
 import { User } from 'src/Entities/user.entity';
 
 @Injectable()
 export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
   constructor(
-    private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly configService: ConfigService,
   ) {
@@ -21,23 +19,15 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     });
   }
 
-  async validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: any,
-    done: VerifyCallback,
-  ): Promise<any> {
-    const { id, userName, name, photos, email } = profile;
-
+  async validate(accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<any> {
     let existingUser = await this.userService.findByFacebookId(profile.id);
     if (!existingUser) {
       const user = {
-        facebookId: id || null,
-        userName: userName || null,
-        email: email || null,
-        name: name?.givenName || null,
-        personalNumber: name?.phoneNumber || null,
-        profilePicture: photos[0]?.value || null,
+        facebookId: profile.id || null,
+        userName: profile.username || null,
+        name: profile.name?.givenName || null,
+        email: profile.emails?.[0]?.value || null,
+        profilePicture: profile.photos?.[0]?.value || null,
       } as User;
 
       existingUser = await this.userService.create(user);

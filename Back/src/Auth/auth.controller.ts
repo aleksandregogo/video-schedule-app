@@ -2,33 +2,44 @@ import { Controller, Get, UseGuards, Req, Res, HttpStatus } from "@nestjs/common
 import { AuthGuard } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
 import { Request, Response } from 'express';
-import { UserService } from "src/User/user.service";
 import { User } from "src/Entities/user.entity";
 import { AuthProvider } from "src/User/Interface/UserInfoInterface";
 import { SuccessResponseObjectDto } from "src/Response/SuccessResponseObject.dto";
 import { UserPresentation } from "src/User/Presentation/user.presentation";
+import { ConfigService } from "@nestjs/config";
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    private readonly configService: ConfigService
   ) {}
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {}
+  @UseGuards(AuthGuard('google'))  // Triggers OAuth login
+  async googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req) {
-    const user = req.user;
-    return { message: 'Google login successful', user };
+  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as User;
+
+    const token = this.authService.generateJwt(user, AuthProvider.googleOauth2, user.googleId);
+
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'strict',
+      path: '/',
+    });
+
+    res.redirect(this.configService.get('AUTH_SUCCESS_REDIRECT_URL'));
   }
 
-  @Get('facebook') // Trigger Facebook OAuth login
-  @UseGuards(AuthGuard('facebook'))
-  async facebookAuth(@Req() req) {}
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook')) // Triggers OAuth login
+  async facebookAuth() {}
 
   @Get('facebook/callback')
   @UseGuards(AuthGuard('facebook'))
@@ -45,7 +56,7 @@ export class AuthController {
       path: '/',
     });
 
-    res.redirect('http://localhost:3000/dashboard');
+    res.redirect(this.configService.get('AUTH_SUCCESS_REDIRECT_URL'));
   }
 
   @Get('user')
@@ -60,9 +71,9 @@ export class AuthController {
 
   @Get('logout')
   @UseGuards(AuthGuard('cookie'))
-  async logout(@Req() req: Request, @Res() res: Response) {
+  async logout(@Res() res: Response) {
     res.clearCookie('auth_token');
 
-    res.send();
+    res.status(200).send('bye');
   }
 }

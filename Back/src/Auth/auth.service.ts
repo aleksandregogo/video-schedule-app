@@ -5,7 +5,9 @@ import { AuthProvider, UserInfo } from 'src/User/Interface/UserInfoInterface';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+  ) {}
 
   generateJwt(
     user: User,
@@ -25,6 +27,6 @@ export class AuthService {
   }
 
   verifyJwt(token: string): any {
-    return this.jwtService.verify(token, { secret: process.env.JWT_SECRET || 'askldjhfakljdshfalkjsdhfklajdshf' });
+    return this.jwtService.verify(token);
   }
  }

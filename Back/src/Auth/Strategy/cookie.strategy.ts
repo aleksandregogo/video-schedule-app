@@ -3,10 +3,16 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
 import { Request } from 'express';
 import { AuthService } from '../auth.service';
+import { UserService } from 'src/User/user.service';
+import { AuthProvider, UserInfo } from 'src/User/Interface/UserInfoInterface';
+import { User } from 'src/Entities/user.entity';
 
 @Injectable()
 export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService
+  ) {
     super();
   }
 
@@ -18,8 +24,22 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
 
     try {
       const payload = this.authService.verifyJwt(token);
+
+      let existingUser: User;
+
+      if (payload.authProvider === AuthProvider.facebook) {
+        existingUser = await this.userService.findByFacebookId(payload.userProviderId);
+      } else if (payload.authProvider = AuthProvider.googleOauth2) {
+        existingUser = await this.userService.findByGoogleId(payload.userProviderId);
+      }
+
+      if (!existingUser) {
+        throw new UnauthorizedException();
+      }
+
       return payload;
     } catch (err) {
+      console.log(err);
       throw new UnauthorizedException('Invalid token');
     }
   }
