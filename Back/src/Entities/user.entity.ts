@@ -1,7 +1,8 @@
-import { Column, Entity ,PrimaryGeneratedColumn} from "typeorm";
+import { Column, Entity ,JoinColumn,OneToOne,PrimaryGeneratedColumn, RelationId} from "typeorm";
 import { Defentity } from "./defentity.entity";
+import { Company } from "./company.entity";
 
-@Entity()
+@Entity('user')
 export class User extends Defentity  {
   @Column()
   name: string;
@@ -23,4 +24,11 @@ export class User extends Defentity  {
 
   @Column({ nullable: true })
   googleId: string;
+
+  @OneToOne(() => Company, (company) => company.id)
+  @JoinColumn()
+  company: Company;
+
+  @RelationId((user: User) => user.company)
+  companyId: number;
 }

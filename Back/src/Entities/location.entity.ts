@@ -1,11 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { Defentity } from './defentity.entity';
+import { Company } from './company.entity';
 
-@Entity()
+@Entity('location')
 export class Location extends Defentity  {
-  @PrimaryGeneratedColumn()
-  id: number;
-
   @Column('decimal', { precision: 10, scale: 8 })
   lat: number;
 
@@ -20,4 +18,14 @@ export class Location extends Defentity  {
 
   @Column()
   corporation: string;
+
+  @ManyToOne(() => Company, (company) => company.id)
+  @JoinColumn()
+  company: Company;
+
+  @RelationId((location: Location) => location.company)
+  companyId: number;
+
+  @Column()
+  name: string;
 }
