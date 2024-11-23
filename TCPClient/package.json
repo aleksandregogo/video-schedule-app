@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "connect": "rm client.js && tsc client.ts && node client.js",
+    "protobuf:generate": "npm run protobuf:js && npm run protobuf:ts",
+    "protobuf:js": "pbjs -t static-module -w commonjs -o ./Protobuf/compiled.js ./Protobuf/message.proto",
+    "protobuf:ts": "pbts -o ./Protobuf/compiled.d.ts ./Protobuf/compiled.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.1"
+  },
+  "dependencies": {
+    "protobufjs": "^7.4.0",
+    "protobufjs-cli": "^1.1.3",
+    "typescript": "^5.7.2"
+  }
+}

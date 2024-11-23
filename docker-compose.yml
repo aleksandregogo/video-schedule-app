@@ -19,14 +19,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+      - "3033:3033"
     environment:
       DATABASE_HOST: db
       DATABASE_PORT: 5432
       DATABASE_USER: kukumala
       DATABASE_PASSWORD: abduljabarkhani
       DATABASE_NAME: mvp-db
+      TCP_HOST: 0.0.0.0
+      TCP_PORT: 3033   
     volumes:
       - ./Back:/app
+      - ./TCPClient:/TCPClient
     depends_on:
       - db
 
