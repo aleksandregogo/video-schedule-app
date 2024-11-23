@@ -7,7 +7,7 @@ export class User extends Defentity  {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ nullable: true })
   userName: string;
 
   @Column({ nullable: true })

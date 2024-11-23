@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package example;
+
+// Message for client requests
+message ClientRequest {
+  string cmd = 1;      // Command pattern for routing
+  string message = 2;  // Actual message content
+  string clientId = 3; // Client identifier
+}
+
+// Message for server responses
+message ServerResponse {
+  string message = 1;   // Response message
+  string timestamp = 2; // Server timestamp
+}

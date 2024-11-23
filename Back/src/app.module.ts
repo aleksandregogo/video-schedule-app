@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeormAsyncConfig } from './Common/DB/typeorm.config';
 import { UserModule } from './User/user.module';
 import { AuthModule } from './Auth/auth.module';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthModule } from './Auth/auth.module';
     AuthModule
   ],
   providers: [
+    AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: HTTPLoggingInterceptor,
