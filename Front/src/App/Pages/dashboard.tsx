@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MapComponent from '../Components/map';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ const Dashboard = () => {
   return <div>
     <h1>Welcome, {name}</h1>
     <button onClick={logout}>logout</button>
+    <MapComponent/>
   </div>;
 };
 
