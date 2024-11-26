@@ -8,6 +8,8 @@ import { TypeormAsyncConfig } from './Common/DB/typeorm.config';
 import { UserModule } from './User/user.module';
 import { AuthModule } from './Auth/auth.module';
 import { AppService } from './app.service';
+import { StorageModule } from './Storage/storage.module';
+import { ScheduleModule } from './Schedule/schedule.module';
 
 @Module({
   imports: [
@@ -15,7 +17,9 @@ import { AppService } from './app.service';
     NestConfigModule.forRoot({ load: [appConfigFactory], isGlobal: true }),
     ConfigModule.forRoot(),
     UserModule,
-    AuthModule
+    AuthModule,
+    ScheduleModule,
+    StorageModule
   ],
   providers: [
     AppService,
