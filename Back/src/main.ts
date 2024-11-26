@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UserModule } from './User/user.module';
 import { AuthModule } from './Auth/auth.module';
 import cookieParser from 'cookie-parser';
+import { ScheduleModule } from './Schedule/schedule.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log', 'error', 'warn', 'debug', 'verbose', 'fatal'] });
@@ -39,7 +40,8 @@ function createSwaggerDoc(app: INestApplication<any>) {
     const document = SwaggerModule.createDocument(app, options, {
       include: [
         UserModule,
-        AuthModule
+        AuthModule,
+        ScheduleModule
       ],
     });
 

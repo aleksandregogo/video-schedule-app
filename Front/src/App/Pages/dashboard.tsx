@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MapComponent from '../Components/map';
+import MapComponent from '../Components/Map/map';
+import FileUploader from '../Components/FileUploader/fileUploader';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const Dashboard = () => {
   return <div>
     <h1>Welcome, {name}</h1>
     <button onClick={logout}>logout</button>
+    <FileUploader />
     <MapComponent/>
   </div>;
 };
