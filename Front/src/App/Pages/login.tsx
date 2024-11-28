@@ -1,12 +1,12 @@
-function Login() {
-  const backendBaseUrl = 'http://localhost:5000/api/v1';
+import { API_URL } from "../../Lib/appConfig";
 
+function Login() {
   const handleGoogleLogin = () => {
-    window.location.href = `${backendBaseUrl}/auth/google`;
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   const handleFacebookLogin = () => {
-    window.location.href = `${backendBaseUrl}/auth/facebook`;
+    window.location.href = `${API_URL}/auth/facebook`;
   };
 
   return (

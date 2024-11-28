@@ -3,7 +3,7 @@ import { StorageService } from "../storage.service";
 import { DeleteFileCommand } from "./delete-file.command";
 
 @CommandHandler(DeleteFileCommand)
-export class GenerateDownloadUrlHandler implements ICommandHandler<DeleteFileCommand> {
+export class DeleteFileHandler implements ICommandHandler<DeleteFileCommand> {
     constructor(private s3StorageService: StorageService) {
     }
     async execute(command: DeleteFileCommand): Promise<any> {

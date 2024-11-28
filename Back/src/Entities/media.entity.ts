@@ -37,14 +37,14 @@ export class Media extends Defentity  {
   })
   duration: number;
 
-  @OneToOne(() => Campaign, (campaign) => campaign.id)
+  @ManyToOne(() => Campaign, (campaign) => campaign.id)
   @JoinColumn()
   campaign: Campaign;
 
   @RelationId((media: Media) => media.campaign)
   campaignId: number;
 
-  @OneToOne(() => User, (user) => user.id)
+  @ManyToOne(() => User, (user) => user.id)
   @JoinColumn()
   user: User;
 

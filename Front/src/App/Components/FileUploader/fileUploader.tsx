@@ -1,29 +1,35 @@
 import React, { useState } from "react";
+import { ScheduleData } from "../Scheduler/scheduler";
+import { APIClient } from "../../../Lib/APIClient";
 
-const FileUploader = () => {
+type UploaderProps = {
+  scheduleData: ScheduleData
+}
+
+const FileUploader = ({ scheduleData }: UploaderProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState("");
 
-  const allowedMimeTypes = ["image/jpeg", "image/png"];
-  const maxSize = 500 * 1024 * 1024; // 500 MB
+  const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/mpeg", "audio/mp4", "audio/mpeg"];
+  const maxSize = 524288000;
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const selectedFile = event.target.files[0];
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    if (!file) return;
 
-      // Validate file size and MIME type
-      if (!allowedMimeTypes.includes(selectedFile.type)) {
-        alert("Invalid file type. Only JPEG and PNG are allowed.");
-        return;
-      }
+    console.log(file.type, file.size)
 
-      if (selectedFile.size > maxSize) {
-        alert("File size exceeds the 500 MB limit.");
-        return;
-      }
-
-      setFile(selectedFile);
+    if (file.size > maxSize) {
+      alert("File size exceeds 500MB limit. Please select a smaller file.");
+      return;
     }
+
+    if (!allowedMimeTypes.includes(file.type)) {
+      alert("Only JPEG, PNG, WEBP, MP4 files are allowed.");
+      return;
+    }
+
+    setFile(file)
   };
 
   const uploadFile = async () => {
@@ -32,53 +38,68 @@ const FileUploader = () => {
       return;
     }
 
-    try {
-      // Step 1: Request upload URL
-      const response = await fetch("/api/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ size: file.size, type: file.type }),
-      });
+    APIClient.post('/schedule/media/upload-url', {
+      campaignId: scheduleData.id,
+      size: file.size,
+      mimeType: file.type
+    })
+      .then((response) => {
+        const {
+          uploadUrl,
+          key,
+          campaignId
+        } = response.data.data;
 
-      if (!response.ok) {
-        throw new Error("Failed to get upload URL");
-      }
+        console.log({
+          uploadUrl,
+          key,
+          campaignId
+        });
+        
+        if (uploadUrl) {
+          setUploadStatus("Uploading...");
 
-      const { uploadUrl, fileId } = await response.json();
-
-      // Step 2: Upload file
-      setUploadStatus("Uploading...");
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file");
-      }
-
-      // Step 3: Notify backend of completion
-      const notifyResponse = await fetch("/api/upload-complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId }),
-      });
-
-      if (!notifyResponse.ok) {
-        throw new Error("Failed to notify backend");
-      }
-
-      setUploadStatus("Upload complete!");
-    } catch (error) {
-      setUploadStatus(`Error: ${error.message}`);
-    }
+          APIClient.put(uploadUrl, file, {
+            headers: {
+              "Content-Type": file.type
+            },
+            withCredentials: false,
+            onUploadProgress: (progressEvent) => {
+              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadStatus(`Uploading: ${progress}%`);
+            },
+          })
+            .then(() => {
+              APIClient.post('/schedule/media/upload-complete', {
+                campaignId: scheduleData.id,
+                size: file.size,
+                mimeType: file.type,
+                key
+              })
+                .then(() => {
+                  setUploadStatus(`Upload Completed`);
+                  setFile(null);
+                })
+                .catch((error) => {
+                  setUploadStatus(`Error: ${error.message}`);
+                })
+            })
+            .catch((error) => {
+              setUploadStatus(`Error: ${error.message}`);
+            })
+        } else {
+          setUploadStatus(`Error: upload url is not provided`);
+        }
+      })
+      .catch((error) => {
+        setUploadStatus(`Error: ${error.message}`);
+      })
   };
 
   return (
     <div>
       <h2>File Uploader</h2>
-      <input type="file" onChange={handleFileChange} />
+      <input type="file" onChange={(e) => handleFileChange(e)} />
       <button onClick={uploadFile} disabled={!file}>
         Upload
       </button>

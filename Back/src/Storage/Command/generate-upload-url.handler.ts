@@ -3,7 +3,7 @@ import { StorageService } from "../storage.service";
 import { GenerateUploadUrlCommand } from "./generate-upload-url.command";
 
 @CommandHandler(GenerateUploadUrlCommand)
-export class GenerateDownloadUrlHandler implements ICommandHandler<GenerateUploadUrlCommand> {
+export class GenerateUploadUrlHandler implements ICommandHandler<GenerateUploadUrlCommand> {
     constructor(private s3StorageService: StorageService) {
     }
     async execute(command: GenerateUploadUrlCommand): Promise<any> {

@@ -7,6 +7,8 @@ export class CampaignPresentation {
         const view = new CampaignViewDto();
 
         view.createdAt = campaign.createdAt;
+        view.id = campaign.id;
+        view.uuid = campaign.uuid;
         view.name = campaign.name;
         return view;
     }

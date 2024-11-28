@@ -1,24 +1,20 @@
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapComponent from '../Components/Map/map';
 import FileUploader from '../Components/FileUploader/fileUploader';
+import { APIClient } from '../../Lib/APIClient';
+import Scheduler, { ScheduleData } from '../Components/Scheduler/scheduler';
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
   const [name, setName] = useState<string>('');
+  const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null);
 
   useEffect(() => {
-    axios
-      .get('http://localhost:5000/api/v1/auth/user', {
-        withCredentials: true,
-      })
+    APIClient.get('/auth/user')
       .then((response) => {
-        console.log('User Info:', response.data);
         const data = response.data.data;
-
-        console.log(data);
 
         setName(data.name);
       })
@@ -29,12 +25,9 @@ const Dashboard = () => {
   }, [navigate])
 
   const logout = async () => {
-    axios
-      .get('http://localhost:5000/api/v1/auth/logout', {
-        withCredentials: true,
-      })
+    APIClient.delete('/auth/logout')
       .catch((err) => {
-        console.error('Error fetching user info:', err);
+        console.error('Error on log out:', err);
       })
       .finally(() => navigate('/login'))
   }
@@ -42,7 +35,9 @@ const Dashboard = () => {
   return <div>
     <h1>Welcome, {name}</h1>
     <button onClick={logout}>logout</button>
-    <FileUploader />
+    <Scheduler onCampaignCreate={(data) => setScheduleData(data)} />
+    {scheduleData && <FileUploader scheduleData={scheduleData}/>}
+    <br/><br/>
     <MapComponent/>
   </div>;
 };
