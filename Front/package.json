@@ -10,6 +10,7 @@
     "nodemon": "^3.1.7",
     "react": "^18.2.0",
     "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
     "react-map-gl": "^7.1.7",
     "react-router-dom": "^6.28.0",
     "typescript": "^5.4.5"
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/leaflet": "^1.9.14",
     "@types/node": "^22.10.0",
     "@types/react-document-meta": "^3.0.2",
     "@vitejs/plugin-react": "^4.3.3",

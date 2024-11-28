@@ -1,3 +1,4 @@
+import { Company } from "src/Entities/company.entity";
 import { User } from "src/Entities/user.entity";
 
 export enum AuthProvider {
@@ -11,6 +12,7 @@ export interface UserInfo {
   email: string;
   name: string;
   username: string;
-  user?: User;
+  user: User;
   authProvider: AuthProvider;
+  company?: Company;
 }

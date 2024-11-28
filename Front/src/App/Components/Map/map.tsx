@@ -1,39 +1,78 @@
-import React, { useEffect } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { APIClient } from '../../../Lib/APIClient';
 import './map.css';
+import 'leaflet/dist/leaflet.css';
+
+interface LocationView {
+  id: number;
+  name: string;
+  status: string;
+  lat: number;
+  lng: number;
+  imageDownloadUrl?: string;
+  price: number;
+  companyId: number;
+}
 
 const MapComponent = () => {
+  const [locations, setLocations] = useState<LocationView[]>([]);
+
   useEffect(() => {
-    // Initialize the map and set its view to the desired city with specific coordinates (Tbilisi)
-    const map = L.map('map', {
-      attributionControl: false // Disable the attribution control
-    }).setView([41.716573082982926, 44.785917937701704], 15); // Coordinates set to Tbilisi
+    APIClient.get('/location/all')
+      .then((response) => {
+        const data = response.data.data.map((location: LocationView) => ({
+          id: location.id,
+          name: location.name,
+          status: location.status,
+          lat: location.lat,
+          lng: location.lng,
+          imageDownloadUrl: location.imageDownloadUrl,
+          price: location.price,
+          companyId: location.companyId,
+        } as LocationView));
 
-    // Use OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Hardcoded pins (markers) for specific locations in the city
-    L.marker([41.70744054498139, 44.785720166965795]).addTo(map)
-      .bindPopup('<b>ფილარმონია').openPopup();
-
-    L.marker([41.72484218998034, 44.7800462223191]).addTo(map)
-      .bindPopup('<b>სააკაძე');
-
-    L.marker([41.716573082982926, 44.785917937701704]).addTo(map)
-      .bindPopup('<b>ცირკი');
-
-    // Cleanup function to remove the map on component unmount
-    return () => {
-      map.remove();
-    };
+        console.log(data);
+        setLocations(data);
+      })
+      .catch((err) => {
+        console.error('Error fetching locations:', err);
+      });
   }, []);
 
+  const uploadLocationPhoto = (locationId: number) => {
+    
+  }
+
   return (
-    <div id="map" style={{ height: '800px', width: '100%' }}></div>
+    <MapContainer
+      center={{
+        lat: 41.716573082982926,
+        lng: 44.785917937701704
+      }}
+      zoom={15}
+      style={{ height: '70vh', width: '100%' }}
+    >
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+      {locations.map((location, index) => (
+        <Marker
+          key={index}
+          position={{
+            lat: location.lat,
+            lng: location.lng
+          }}
+        >
+          <Popup>
+            <b>{location.name}</b>
+            <br/>
+            {location.imageDownloadUrl ?
+              <img src={location.imageDownloadUrl}/>
+              : <button onClick={() => uploadLocationPhoto(location.id)}>Upload photo</button>
+            }
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
   );
 };
 

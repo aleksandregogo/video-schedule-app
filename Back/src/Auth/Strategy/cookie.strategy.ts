@@ -37,6 +37,9 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
         throw new UnauthorizedException();
       }
 
+      payload.user = existingUser;
+      if (existingUser.company) payload.company = existingUser.company;
+
       return payload;
     } catch (err) {
       console.log(err);
