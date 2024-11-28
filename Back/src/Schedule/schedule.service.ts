@@ -13,20 +13,31 @@ import { FileUploadRequestDto } from "./Dto/file.upload.request.dto";
 import { FileUploadCompleteDto } from "./Dto/file.upload.complete.dto";
 import { DeleteFileCommand } from "src/Storage/Command/delete-file.command";
 import { UserInfo } from "src/User/Interface/UserInfoInterface";
+import { LocationService } from "src/Location/location.service";
+import { Location } from "src/Entities/location.entity";
+import { Company } from "src/Entities/company.entity";
 
 @Injectable()
 export class ScheduleService {
   constructor(
     private readonly configService: ConfigService,
-    private commandBuss: CommandBus,
+    private commandBus: CommandBus,
+    private readonly locationService: LocationService,
     @InjectRepository(Campaign) private campaignRepository: Repository<Campaign>,
     @InjectRepository(Media) private mediaRepository: Repository<Media>
   ) {}
 
-  async createCampaign(user: User, createCampaignDto: CreateCampaignDto) {
+  async createCampaign(user: User, createCampaignDto: CreateCampaignDto) {    
+    const { locationId, name } = createCampaignDto;
+
+    const location = await this.locationService.findLocationById(locationId);
+
     const campaign = new Campaign();
     campaign.uuid = v4();
-    campaign.name = createCampaignDto.name;
+    campaign.name = name;
+    campaign.user = user;
+    campaign.location = { id: location.id } as Location;
+    campaign.company = { id: location.company.id } as Company;
 
     return await this.campaignRepository.save(campaign);
   }
@@ -42,11 +53,11 @@ export class ScheduleService {
       throw new HttpException("File size exceeds limit", HttpStatus.BAD_REQUEST);
     }
 
-    const fileFormat = fileUploadRequestDto.mimeType.split('/')[1];
-    const key = String(`${user.userLocalId}_${v4()}.${fileFormat}`);
+    const fileFormat = mimeType.split('/')[1];
+    const key = String(`${user.userLocalId}_CAMPAIGN_MEDIA_${v4()}.${fileFormat}`);
     const bucket = this.configService.get('S3_MEDIA_BUCKET');
 
-    const uploadUrl = await this.commandBuss.execute(
+    const uploadUrl = await this.commandBus.execute(
       new GenerateUploadUrlCommand({ bucket, key, mimeType, size })
     );
 
@@ -61,7 +72,7 @@ export class ScheduleService {
     };
   }
 
-  async markUploadComplete(user: User, fileUploadCompleteDto: FileUploadCompleteDto) {
+  async markUploadComplete(user: UserInfo, fileUploadCompleteDto: FileUploadCompleteDto) {
     const { campaignId, mimeType, size, key } = fileUploadCompleteDto;
 
     const fileFormat = mimeType.split('/')[1];
@@ -70,7 +81,7 @@ export class ScheduleService {
 
     media.uuid = v4();
     media.campaign = { id: campaignId } as Campaign;
-    media.user = { id: user.id } as User;
+    media.user = { id: user.user.id } as User;
     media.key = key;
     media.bucketName = this.configService.get('S3_MEDIA_BUCKET');
     media.format = fileFormat;
@@ -84,7 +95,7 @@ export class ScheduleService {
       });
 
     if (!savedMedia) {
-      await this.commandBuss.execute(
+      await this.commandBus.execute(
         new DeleteFileCommand({ bucket: this.configService.get('S3_MEDIA_BUCKET'), key })
       );
       throw new BadRequestException('Something went wrong while updating DB');

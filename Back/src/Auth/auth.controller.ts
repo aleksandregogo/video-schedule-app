@@ -3,7 +3,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
 import { Request, Response } from 'express';
 import { User } from "src/Entities/user.entity";
-import { AuthProvider } from "src/User/Interface/UserInfoInterface";
+import { AuthProvider, UserInfo } from "src/User/Interface/UserInfoInterface";
 import { SuccessResponseObjectDto } from "src/Response/SuccessResponseObject.dto";
 import { UserPresentation } from "src/User/Presentation/user.presentation";
 import { ConfigService } from "@nestjs/config";
@@ -64,10 +64,10 @@ export class AuthController {
   @Get('user')
   @UseGuards(AuthGuard('cookie'))
   async getUser(@Req() req: Request) {
-    const user = req.user as User;
+    const user = req.user as UserInfo;
 
     return new SuccessResponseObjectDto({
-      data: new UserPresentation().present(user)
+      data: new UserPresentation().present(user.user)
     })
   }
 

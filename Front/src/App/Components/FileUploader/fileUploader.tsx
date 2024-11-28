@@ -6,6 +6,10 @@ type UploaderProps = {
   scheduleData: ScheduleData
 }
 
+// interface OwnerData {}
+
+// const FILE_UPLOAD_OWNER = 
+
 const FileUploader = ({ scheduleData }: UploaderProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -16,8 +20,6 @@ const FileUploader = ({ scheduleData }: UploaderProps) => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null;
     if (!file) return;
-
-    console.log(file.type, file.size)
 
     if (file.size > maxSize) {
       alert("File size exceeds 500MB limit. Please select a smaller file.");
@@ -38,7 +40,7 @@ const FileUploader = ({ scheduleData }: UploaderProps) => {
       return;
     }
 
-    APIClient.post('/schedule/media/upload-url', {
+    APIClient.post('/schedule/media/upload-request', {
       campaignId: scheduleData.id,
       size: file.size,
       mimeType: file.type

@@ -16,24 +16,21 @@ import { UserInfo } from "src/User/Interface/UserInfoInterface";
 @UseGuards(AuthGuard('cookie'))
 @ApiTags('Schedule')
 export class ScheduleController {
-  constructor(
-    private readonly scheduleService: ScheduleService,
-    private readonly configService: ConfigService
-  ) {}
+  constructor(private readonly scheduleService: ScheduleService) {}
 
   @Post("campaign")
   async createCampaign(
     @Req() req: Request,
     @Body() createCampaignDto: CreateCampaignDto
   ) {
-    const user = req.user as User;
+    const user = req.user as UserInfo;
 
-    const campaign = await this.scheduleService.createCampaign(user, createCampaignDto);
+    const campaign = await this.scheduleService.createCampaign(user.user, createCampaignDto);
 
     return new CampaignPresentation().present(campaign);
   }
 
-  @Post("media/upload-url")
+  @Post("media/upload-request")
   async getUploadUrl(
     @Req() req: Request,
     @Body() fileUploadRequestDto: FileUploadRequestDto
@@ -54,7 +51,7 @@ export class ScheduleController {
     @Req() req: Request,
     @Body() fileUploadCompleteDto: FileUploadCompleteDto
   ) {
-    const user = req.user as User;
+    const user = req.user as UserInfo;
 
     return this.scheduleService.markUploadComplete(user, fileUploadCompleteDto);
   }

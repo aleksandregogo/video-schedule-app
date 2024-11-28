@@ -11,15 +11,29 @@ export class UserService {
 ) {}
 
   async findByFacebookId(facebookId: string): Promise<User | null> {
-    return this.userRepository.findOneOrFail({ where: { facebookId: Equal(facebookId) } })
-    .catch((err) => {
-      console.error(err);
-      return null;
+    return this.userRepository.findOneOrFail({
+      where: {
+        facebookId: Equal(facebookId)
+      },
+      relations: {
+        company: true
+      }
     })
+      .catch((err) => {
+        console.error(err);
+        return null;
+      })
   }
 
   async findByGoogleId(googleId: string): Promise<User | null> {
-    return this.userRepository.findOneOrFail({ where: { googleId: Equal(googleId) } })
+    return this.userRepository.findOneOrFail({
+      where: {
+        googleId: Equal(googleId)
+      },
+      relations: {
+        company: true
+      }
+    })
       .catch((err) => {
         console.log(err);
         return null
