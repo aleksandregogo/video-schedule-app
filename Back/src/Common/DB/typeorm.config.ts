@@ -4,6 +4,8 @@ import { APP_CONFIG, AppConfig } from '../Config/app.config';
 import { User } from 'src/Entities/user.entity';
 import { Company } from 'src/Entities/company.entity';
 import { Location } from 'src/Entities/location.entity';
+import { Campaign } from 'src/Entities/campaign.entity';
+import { Media } from 'src/Entities/media.entity';
 
 export const TypeormAsyncConfig: TypeOrmModuleAsyncOptions = {
   inject: [APP_CONFIG],
@@ -17,7 +19,7 @@ export const TypeormAsyncConfig: TypeOrmModuleAsyncOptions = {
       username: appConfig.db.username,
       password: appConfig.db.password,
       database: appConfig.db.database,
-      entities: [User, Location, Company],
+      entities: [User, Location, Company, Campaign, Media],
       migrationsRun: false,
       synchronize: false,
       logging: true,

@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req, Res, HttpStatus } from "@nestjs/common";
+import { Controller, Get, UseGuards, Req, Res, Delete } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
 import { Request, Response } from 'express';
@@ -7,8 +7,10 @@ import { AuthProvider } from "src/User/Interface/UserInfoInterface";
 import { SuccessResponseObjectDto } from "src/Response/SuccessResponseObject.dto";
 import { UserPresentation } from "src/User/Presentation/user.presentation";
 import { ConfigService } from "@nestjs/config";
+import { ApiTags } from "@nestjs/swagger";
 
 @Controller('auth')
+@ApiTags('Auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -69,11 +71,11 @@ export class AuthController {
     })
   }
 
-  @Get('logout')
+  @Delete('logout')
   @UseGuards(AuthGuard('cookie'))
   async logout(@Res() res: Response) {
     res.clearCookie('auth_token');
 
-    res.status(200).send('bye');
+    res.status(204).send();
   }
 }

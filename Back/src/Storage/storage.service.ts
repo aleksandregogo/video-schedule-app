@@ -1,7 +1,7 @@
-import {DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
-import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 @Injectable()
 export class StorageService {
@@ -14,20 +14,23 @@ export class StorageService {
             endpoint: this.configService.get('S3_ENDPOINT'),
             credentials: {
                 accessKeyId: this.configService.get('S3_ACCESS_KEY_ID'),
-                secretAccessKey: this.configService.get('S3_SECRET_ACCESS_KEY'),
+                secretAccessKey: this.configService.get('S3_ACCESS_KEY_SECRET'),
             },
+            region: this.configService.get('S3_REGION'),
+            forcePathStyle: true
         });
 
-        this.downloadPresignedUrlExpTime = this.configService.get('S3_DOWNLOAD_PRESIGNED_URL_EXP_TIME') || 600;
-        this.uploadPresignedUrlExpTime = this.configService.get('S3_UPLOAD_PRESIGNED_URL_EXP_TIME') || 600;
+        this.downloadPresignedUrlExpTime = +this.configService.get('S3_DOWNLOAD_PRESIGNED_URL_EXP_TIME') || 600;
+        this.uploadPresignedUrlExpTime = +this.configService.get('S3_UPLOAD_PRESIGNED_URL_EXP_TIME') || 600;
     }
 
     async generateDownloadPresignedUrl(bucket: string, key: string): Promise<string> {
         const command = new GetObjectCommand({
             Bucket: bucket,
-            Key: key,
-        })
-        return getSignedUrl(this.s3Client, command, { expiresIn: this.downloadPresignedUrlExpTime })
+            Key: key
+        });
+
+        return await getSignedUrl(this.s3Client, command, { expiresIn: this.downloadPresignedUrlExpTime })
             .catch((err) => {
                 console.error({
                     message: 'Error while generation of download presigned url',
@@ -40,20 +43,18 @@ export class StorageService {
                         }
                     }
                 });
-    
+
                 return null;
-            })
+            });
     };
 
-    async generateUploadPresignedUrl(key: string, bucket: string, mimeType: string, size: number) {
+    async generateUploadPresignedUrl(bucket: string, key: string, mimeType: string, size: number) {
         const command = new PutObjectCommand({
             Bucket: bucket,
             Key: key,
-            ContentType: mimeType,
-            ContentLength: size
         });
 
-        return getSignedUrl(this.s3Client, command, { expiresIn: this.uploadPresignedUrlExpTime })
+        return await getSignedUrl(this.s3Client, command, { expiresIn: this.uploadPresignedUrlExpTime })
             .catch((err) => {
                 console.error({
                     message: 'Error while generation of upload url',

@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/node": "^22.10.0",
     "@types/react-document-meta": "^3.0.2",
     "@vitejs/plugin-react": "^4.3.3",
     "vite": "^5.4.11",
