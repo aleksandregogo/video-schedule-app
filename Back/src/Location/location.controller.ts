@@ -12,12 +12,12 @@ import { LocationImageUploadCompleteDto } from './Dto/location.image.upload.comp
 
 @ApiTags('Location')
 @Controller('location')
-@UseGuards(AuthGuard('cookie'))
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
   @ApiOperation({summary: 'Create location'})
   @Post('/create')
+  @UseGuards(AuthGuard('cookie'))
   async createLocation(@Req() req, @Body() locationCreateDto: LocationCreateDto) {
     const user = req.user as UserInfo;
 
@@ -54,6 +54,7 @@ export class LocationController {
   }
 
   @Post("media/upload-request")
+  @UseGuards(AuthGuard('cookie'))
   async getUploadUrl(
     @Req() req: Request,
     @Body() locationImageUploadRequestDto: LocationImageUploadRequestDto
@@ -77,6 +78,7 @@ export class LocationController {
   }
 
   @Post("media/upload-complete")
+  @UseGuards(AuthGuard('cookie'))
   async uploadComplete(
     @Req() req: Request,
     @Body() locationImageUploadCompleteDto: LocationImageUploadCompleteDto

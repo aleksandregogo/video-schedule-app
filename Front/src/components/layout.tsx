@@ -9,13 +9,13 @@ const Layout: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen">
-    {!user && <Header />}
-    <div className="flex flex-1">
-      {user && <Sidebar />}
-      <main className="flex-1 p-4 bg-gray-100 overflow-auto">
-        <Outlet />
-      </main>
-    </div>
+      {!user && <Header />}
+      <div className="flex flex-1">
+        {user && <Sidebar />}
+        <main className="flex-1 p-4 bg-gray-100 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

@@ -9,7 +9,6 @@ import { APIClient } from "@/services/APIClient";
 import { Spinner } from "@/components/ui/spinner";
 import { useNavigate } from "react-router-dom";
 
-
 interface UserInfo {
   id: number;
   name: string;
@@ -22,7 +21,7 @@ interface UserInfo {
 type AuthContextType = {
   user: UserInfo;
   logout: () => Promise<void>;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -48,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!checkedAuth.current) {
       APIClient.get('/auth/user')
         .then((response) => {
-          const userData = response.data?.data as UserInfo;
+          const userData = response?.data?.data as UserInfo;
   
           if (userData) {
             setUserInfo(userData);

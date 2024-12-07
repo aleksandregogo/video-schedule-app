@@ -15,3 +15,16 @@
 .leaflet-control {
   border-radius: 8px; /* Optional: make buttons rounded */
 }
+/* Constrain the MapContainer's parent */
+.map-container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Constrain leaflet map elements */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+}
