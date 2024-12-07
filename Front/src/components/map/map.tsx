@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { APIClient } from '../../../Lib/APIClient';
 import './map.css';
 import 'leaflet/dist/leaflet.css';
+import { APIClient } from '@/services/APIClient';
 
 interface LocationView {
   id: number;

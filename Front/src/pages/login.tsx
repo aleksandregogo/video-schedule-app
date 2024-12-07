@@ -1,4 +1,4 @@
-import { API_URL } from "../../Lib/appConfig";
+import { API_URL } from "@/config/appConfig";
 
 function Login() {
   const handleGoogleLogin = () => {

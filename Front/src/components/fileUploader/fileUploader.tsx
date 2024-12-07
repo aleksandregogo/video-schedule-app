@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { ScheduleData } from "../Scheduler/scheduler";
-import { APIClient } from "../../../Lib/APIClient";
+import { ScheduleData } from "../scheduler/scheduler";
+import { APIClient } from "@/services/APIClient";
 
 type UploaderProps = {
   scheduleData: ScheduleData

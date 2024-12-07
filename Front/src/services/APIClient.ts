@@ -1,11 +1,11 @@
 import axios from "axios";
-import { API_URL } from "./appConfig";
+import { API_URL } from "../config/appConfig";
 
 export const APIClient = (() => {
-  let logoutFunction: () => void;
+  let logoutCb: () => void;
 
-  const setLogoutFunction = (func: () => void) => {
-    logoutFunction = func;
+  const setLogoutCb = (func: () => void) => {
+    logoutCb = func;
   };
 
   const instance = axios.create({
@@ -27,8 +27,8 @@ export const APIClient = (() => {
       }
       if (!error.response || [401].includes(error.response?.status)) {
         const url = error.config?.url;
-        if (url != "/auth/user" && logoutFunction) {
-          logoutFunction();
+        if (url != "/auth/user" && logoutCb) {
+          logoutCb();
         }
       } else {
         return Promise.reject(error);
@@ -43,6 +43,6 @@ export const APIClient = (() => {
     get: instance.get,
     put: instance.put,
     delete: instance.delete,
-    setLogoutFunction,
+    setLogoutCb,
   };
 })();

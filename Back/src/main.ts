@@ -36,7 +36,7 @@ async function bootstrap() {
 }
 
 function createSwaggerDoc(app: INestApplication<any>) {
-  const options = new DocumentBuilder().setTitle('Gateway API').setVersion('1.0').addBearerAuth().build();
+  const options = new DocumentBuilder().setTitle('Adloop API').setVersion('1.0.0').build();
   try {
     const document = SwaggerModule.createDocument(app, options, {
       include: [
