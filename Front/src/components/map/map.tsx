@@ -32,7 +32,6 @@ const MapComponent = () => {
           companyId: location.companyId,
         } as LocationView));
 
-        console.log(data);
         setLocations(data);
       })
       .catch((err) => {

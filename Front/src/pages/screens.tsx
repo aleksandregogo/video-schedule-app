@@ -1,8 +1,8 @@
 import MapComponent from '../components/map/map';
 
-const Dashboard = () => {
+const Screens = () => {
 
   return <MapComponent/>;
 };
 
-export default Dashboard;
+export default Screens;

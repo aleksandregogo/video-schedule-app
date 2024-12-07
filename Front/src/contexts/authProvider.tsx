@@ -9,12 +9,19 @@ import { APIClient } from "@/services/APIClient";
 import { Spinner } from "@/components/ui/spinner";
 import { useNavigate } from "react-router-dom";
 
+
 interface UserInfo {
+  id: number;
   name: string;
+  company?: {
+    id: number;
+    name: string;
+  };
 }
 
 type AuthContextType = {
-  userInfo: UserInfo;
+  user: UserInfo;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,28 +30,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const navigate = useNavigate();
-  
-  APIClient.setLogoutCb(() => navigate('/login'));
 
   const checkedAuth = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
+  APIClient.setLogoutCb(() => setUserInfo(null));
+
+  const logout = async () => {
+    APIClient.delete('/auth/logout')
+      .catch((err) => console.error('Error on log out:', err))
+      .finally(() => setUserInfo(null));
+  }
+
   useEffect(() => {
     if (!checkedAuth.current) {
       APIClient.get('/auth/user')
         .then((response) => {
-          const data = response.data.data;
+          const userData = response.data?.data as UserInfo;
   
-          setUserInfo({
-            name: data.name
-          })
+          if (userData) {
+            setUserInfo(userData);
+          } else {
+            console.error('User info is not present in response');
+          }
         })
-        .catch((err) => {
-          console.error('Error fetching user info:', err);
-          navigate('/login')
-        })
+        .catch((err) => console.error('Error fetching user info:', err))
         .finally(() => {
           checkedAuth.current = true;
           setLoading(false);
@@ -54,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ userInfo }}
+      value={{ user: userInfo, logout }}
     >
       {loading ? <Spinner variant="fullsize" /> : children}
     </AuthContext.Provider>
