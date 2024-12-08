@@ -5,45 +5,49 @@ import { User } from "src/Entities/user.entity";
 import { GenerateUploadUrlCommand } from "src/Storage/Command/generate-upload-url.command";
 import { v4 } from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Equal, Repository } from "typeorm";
 import { Campaign } from "src/Entities/campaign.entity";
 import { Media } from "src/Entities/media.entity";
 import { CreateCampaignDto } from "./Dto/create.campaign.dto";
-import { FileUploadRequestDto } from "./Dto/file.upload.request.dto";
-import { FileUploadCompleteDto } from "./Dto/file.upload.complete.dto";
 import { DeleteFileCommand } from "src/Storage/Command/delete-file.command";
 import { UserInfo } from "src/User/Interface/UserInfoInterface";
-import { LocationService } from "src/Location/location.service";
-import { Location } from "src/Entities/location.entity";
+import { ScreenService } from "src/Screen/screen.service";
+import { Screen } from "src/Entities/screen.entity";
 import { Company } from "src/Entities/company.entity";
+import { FileUploadRequestDto } from "src/Storage/Dto/file.upload.request.dto";
+import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto";
 
 @Injectable()
 export class ScheduleService {
   constructor(
     private readonly configService: ConfigService,
     private commandBus: CommandBus,
-    private readonly locationService: LocationService,
+    private readonly screenService: ScreenService,
     @InjectRepository(Campaign) private campaignRepository: Repository<Campaign>,
     @InjectRepository(Media) private mediaRepository: Repository<Media>
   ) {}
 
   async createCampaign(user: User, createCampaignDto: CreateCampaignDto) {    
-    const { locationId, name } = createCampaignDto;
+    const { screenId, name } = createCampaignDto;
 
-    const location = await this.locationService.findLocationById(locationId);
+    const screen = await this.screenService.findScreenById(screenId);
+
+    if (!screen) {
+      throw new HttpException(`Screen with id: ${screenId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    }
 
     const campaign = new Campaign();
     campaign.uuid = v4();
     campaign.name = name;
     campaign.user = user;
-    campaign.location = { id: location.id } as Location;
-    campaign.company = { id: location.company.id } as Company;
+    campaign.screen = { id: screen.id } as Screen;
+    campaign.company = { id: screen.company.id } as Company;
 
     return await this.campaignRepository.save(campaign);
   }
 
   async generateUploadUrl(user: UserInfo, fileUploadRequestDto: FileUploadRequestDto) {
-    const { campaignId, mimeType, size } = fileUploadRequestDto;
+    const { ownerId, mimeType, size } = fileUploadRequestDto;
 
     if (!this.configService.get('S3_ALLOWED_MIME_TYPES').includes(mimeType)) {
       throw new HttpException("Invalid file type", HttpStatus.BAD_REQUEST);
@@ -51,6 +55,23 @@ export class ScheduleService {
 
     if (size > this.configService.get('S3_ALLOWED_FILE_SIZE')) {
       throw new HttpException("File size exceeds limit", HttpStatus.BAD_REQUEST);
+    }
+
+    const campaign = await this.campaignRepository.findOne({
+      where: {
+        id: Equal(ownerId),
+      },
+      relations: {
+        company: true
+      }
+    })
+      .catch((err) => {
+        console.error(err);
+        return null;
+      });
+
+    if (!campaign) {
+      throw new HttpException(`Campaign with id: ${ownerId} doesn't exists`, HttpStatus.BAD_REQUEST);
     }
 
     const fileFormat = mimeType.split('/')[1];
@@ -67,26 +88,24 @@ export class ScheduleService {
 
     return {
       uploadUrl,
-      campaignId,
+      campaignId: ownerId,
       key
     };
   }
 
   async markUploadComplete(user: UserInfo, fileUploadCompleteDto: FileUploadCompleteDto) {
-    const { campaignId, mimeType, size, key } = fileUploadCompleteDto;
+    const { ownerId, mimeType, size, key } = fileUploadCompleteDto;
 
     const fileFormat = mimeType.split('/')[1];
 
     const media = new Media();
 
     media.uuid = v4();
-    media.campaign = { id: campaignId } as Campaign;
     media.user = { id: user.user.id } as User;
     media.key = key;
     media.bucketName = this.configService.get('S3_MEDIA_BUCKET');
     media.format = fileFormat;
     media.size = size;
-    media.uploadComplete = false;
 
     const savedMedia = await this.mediaRepository.save(media)
       .catch((err) => {
@@ -100,6 +119,9 @@ export class ScheduleService {
       );
       throw new BadRequestException('Something went wrong while updating DB');
     }
+
+    // Update campaign
+    await this.campaignRepository.update({ id: Equal(ownerId) }, { media: { id: media.id } });
 
     return { message: "Upload marked as complete" };
   }

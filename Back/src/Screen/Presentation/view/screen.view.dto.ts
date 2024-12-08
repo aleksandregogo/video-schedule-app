@@ -1,9 +1,9 @@
-import { LocationStatus } from "src/Location/Enum/location.status.enum";
+import { ScreenStatus } from "src/Screen/Enum/screen.status.enum";
 
-export class LocationViewDto {
+export class ScreenViewDto {
     id: number;
     name: string;
-    status: LocationStatus;
+    status: ScreenStatus;
     lat: number;
     lng: number;
     imageDownloadUrl?: string;

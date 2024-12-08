@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { Defentity } from './defentity.entity';
-import { Location } from './location.entity';
+import { Screen } from './screen.entity';
 import { BookingStatus } from 'src/Schedule/Enum/booking.status.enum';
 import { User } from './user.entity';
 
@@ -15,12 +15,12 @@ export class Booking extends Defentity  {
   @Column({ type: 'varchar', length: 20, default: BookingStatus.PENDING })
   status: BookingStatus;
 
-  @ManyToOne(() => Location, (location) => location.id)
+  @ManyToOne(() => Screen, (screen) => screen.id)
   @JoinColumn()
-  location: Location;
+  screen: Screen;
 
-  @RelationId((booking: Booking) => booking.location)
-  locationId: number;
+  @RelationId((booking: Booking) => booking.screen)
+  screenId: number;
 
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn()

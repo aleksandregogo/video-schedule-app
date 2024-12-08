@@ -1,11 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsLatitude, IsLongitude, IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { LocationStatus } from "../Enum/location.status.enum";
+import { ScreenStatus } from "../Enum/screen.status.enum";
 
-export class LocationCreateDto {
+export class ScreenCreateDto {
   @ApiProperty({
     type: String,
-    example: 'New location',
+    example: 'New Screen',
   })
   @IsString()
   name: string;
@@ -36,9 +36,9 @@ export class LocationCreateDto {
 
   @ApiProperty({
     type: String,
-    example: LocationStatus.ON,
+    example: ScreenStatus.ON,
   })
   @IsString()
   @IsNotEmpty()
-  status: LocationStatus;
+  status: ScreenStatus;
 }

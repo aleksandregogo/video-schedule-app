@@ -13,12 +13,12 @@ export interface ScheduleData {
 
 const Scheduler = ({ onCampaignCreate }: SchedulerProps) => {
   const [campaignName, setCampaignName] = useState('');
-  const [locationId, setLocationId] = useState(5);
+  const [screenId, setScreenId] = useState(5);
 
   const createCampaign = async () => {
     APIClient.post('/schedule/campaign', {
       name: campaignName,
-      location
+      screenId
     })
       .then(async (response) => {
         const { uuid, name, id } = response.data;
@@ -34,7 +34,7 @@ const Scheduler = ({ onCampaignCreate }: SchedulerProps) => {
     <div>
       <h2>Scheduler</h2>
       <input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} placeholder="Yout campaign name"/>
-      <input value={locationId} onChange={(e) => setLocationId(Number(e.target.value))} placeholder="Location id"/>
+      <input value={screenId} onChange={(e) => setScreenId(Number(e.target.value))} placeholder="Screen id"/>
       <button onClick={createCampaign} disabled={campaignName === ''}>
         Create Campaign
       </button>

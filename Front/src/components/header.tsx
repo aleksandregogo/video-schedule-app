@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { API_URL } from "@/config/appConfig";
+import { FaGoogle, FaFacebook } from "react-icons/fa";
 
 const Header: React.FC = () => {
   const handleGoogleLogin = () => {
@@ -12,19 +12,21 @@ const Header: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <Button
-        onClick={handleGoogleLogin}
-        className="w-64 bg-red-500 text-white hover:bg-red-600"
-      >
-        Login with Google
-      </Button>
-      <Button
-        onClick={handleFacebookLogin}
-        className="w-64 bg-blue-500 text-white hover:bg-blue-600"
-      >
-        Login with Facebook
-      </Button>
+    <div className="h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="flex gap-6">
+        <div
+          onClick={handleGoogleLogin}
+          className="cursor-pointer flex items-center bg-white shadow-md rounded-full p-4 hover:shadow-lg hover:bg-gray-50 transition"
+        >
+          <FaGoogle className="text-red-500 w-10 h-10" />
+        </div>
+        <div
+          onClick={handleFacebookLogin}
+          className="cursor-pointer flex items-center bg-white shadow-md rounded-full p-4 hover:shadow-lg hover:bg-gray-50 transition"
+        >
+          <FaFacebook className="text-blue-600 w-10 h-10" />
+        </div>
+      </div>
     </div>
   );
 };

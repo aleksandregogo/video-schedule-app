@@ -1,24 +1,24 @@
 import { Body, Controller, HttpException, HttpStatus, Post, UseGuards, Req, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { LocationCreateDto } from './Dto/location.create.dto';
-import { LocationService } from './location.service';
-import { LocationPresentation } from './Presentation/location.presentation';
 import { AuthGuard } from '@nestjs/passport';
 import { UserInfo } from 'src/User/Interface/UserInfoInterface';
 import { Request } from 'express';
-import { LocationImageUploadRequestDto } from './Dto/location.image.upload.request.dto';
 import { SuccessResponseObjectDto } from 'src/Response/SuccessResponseObject.dto';
-import { LocationImageUploadCompleteDto } from './Dto/location.image.upload.complete.dto';
+import { FileUploadRequestDto } from 'src/Storage/Dto/file.upload.request.dto';
+import { FileUploadCompleteDto } from 'src/Storage/Dto/file.upload.complete.dto';
+import { ScreenService } from './screen.service';
+import { ScreenCreateDto } from './Dto/screen.create.dto';
+import { ScreenPresentation } from './Presentation/screen.presentation';
 
-@ApiTags('Location')
-@Controller('location')
-export class LocationController {
-  constructor(private readonly locationService: LocationService) {}
+@ApiTags('Screen')
+@Controller('screen')
+export class ScreenController {
+  constructor(private readonly screenService: ScreenService) {}
 
-  @ApiOperation({summary: 'Create location'})
+  @ApiOperation({summary: 'Create screen'})
   @Post('/create')
   @UseGuards(AuthGuard('cookie'))
-  async createLocation(@Req() req, @Body() locationCreateDto: LocationCreateDto) {
+  async createScreen(@Req() req, @Body() screenCreateDto: ScreenCreateDto) {
     const user = req.user as UserInfo;
 
     if (!user.company) {
@@ -28,28 +28,28 @@ export class LocationController {
       }, HttpStatus.UNAUTHORIZED)
     }
 
-    const createdLocation = await this.locationService.createLocation(user, locationCreateDto);
+    const createdScreen = await this.screenService.createScreen(user, screenCreateDto);
 
-    if (!createdLocation) throw new HttpException({
-      message: 'Location creation error',
+    if (!createdScreen) throw new HttpException({
+      message: 'Screen creation error',
       errorCode: 0,
     }, HttpStatus.BAD_REQUEST)
 
-    return new LocationPresentation().present(createdLocation);
+    return new ScreenPresentation().present(createdScreen);
   }
 
-  @ApiOperation({summary: 'Get all locations'})
+  @ApiOperation({summary: 'Get all screens'})
   @Get('/all')
-  async getLocations() {
-    const locations = await this.locationService.getAllLocation();
+  async getScreens() {
+    const screens = await this.screenService.getAllScreens();
 
-    if (!locations) throw new HttpException({
-      message: 'Error on selecting all locations',
+    if (!screens) throw new HttpException({
+      message: 'Error on selecting all screens',
       errorCode: 0,
     }, HttpStatus.BAD_REQUEST)
 
     return new SuccessResponseObjectDto({
-      data: new LocationPresentation().presentList(locations)
+      data: new ScreenPresentation().presentList(screens)
     });
   }
 
@@ -57,7 +57,7 @@ export class LocationController {
   @UseGuards(AuthGuard('cookie'))
   async getUploadUrl(
     @Req() req: Request,
-    @Body() locationImageUploadRequestDto: LocationImageUploadRequestDto
+    @Body() fileUploadDto: FileUploadRequestDto
   ) {
     const user = req.user as UserInfo;
 
@@ -68,7 +68,7 @@ export class LocationController {
       }, HttpStatus.UNAUTHORIZED)
     }
 
-    const data = await this.locationService.generateUploadUrl(user, locationImageUploadRequestDto);
+    const data = await this.screenService.generateUploadUrl(user, fileUploadDto);
 
     if (!data) {
       throw new HttpException("Something went wrong", HttpStatus.BAD_REQUEST);
@@ -81,7 +81,7 @@ export class LocationController {
   @UseGuards(AuthGuard('cookie'))
   async uploadComplete(
     @Req() req: Request,
-    @Body() locationImageUploadCompleteDto: LocationImageUploadCompleteDto
+    @Body() fileUploadCompleteDto: FileUploadCompleteDto
   ) {
     const user = req.user as UserInfo;
 
@@ -92,6 +92,6 @@ export class LocationController {
       }, HttpStatus.UNAUTHORIZED)
     }
 
-    return this.locationService.markUploadComplete(user, locationImageUploadCompleteDto);
+    return this.screenService.markUploadComplete(user, fileUploadCompleteDto);
   }
 }

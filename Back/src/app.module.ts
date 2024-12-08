@@ -10,7 +10,7 @@ import { AuthModule } from './Auth/auth.module';
 import { AppService } from './app.service';
 import { StorageModule } from './Storage/storage.module';
 import { ScheduleModule } from './Schedule/schedule.module';
-import { LocationModule } from './Location/location.module';
+import { ScreenModule } from './Screen/screen.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { LocationModule } from './Location/location.module';
     AuthModule,
     ScheduleModule,
     StorageModule,
-    LocationModule
+    ScreenModule
   ],
   providers: [
     AppService,

@@ -1,16 +1,16 @@
 import { Entity, Column, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { Defentity } from './defentity.entity';
 import { Company } from './company.entity';
-import { LocationStatus } from 'src/Location/Enum/location.status.enum';
 import { Exclude } from 'class-transformer';
+import { ScreenStatus } from 'src/Screen/Enum/screen.status.enum';
 
-@Entity('location')
-export class Location extends Defentity  {
+@Entity('screen')
+export class Screen extends Defentity  {
   @Column({ type: 'varchar', length: 50 })
   name: string;
 
-  @Column({ type: 'varchar', length: 20, default: LocationStatus.OFF })
-  status: LocationStatus;
+  @Column({ type: 'varchar', length: 20, default: ScreenStatus.OFF })
+  status: ScreenStatus;
 
   @Column({
     type: 'decimal',
@@ -40,7 +40,7 @@ export class Location extends Defentity  {
   @Column({ type: 'varchar', length: 50, nullable: true })
   imageBucket: string;
 
-  // Only assigned code level when user requests locations
+  // Only assigned code level when user requests screens
   @Exclude()
   imageDownloadUrl?: string;
 
@@ -51,6 +51,6 @@ export class Location extends Defentity  {
   @JoinColumn()
   company: Company;
 
-  @RelationId((location: Location) => location.company)
+  @RelationId((screen: Screen) => screen.company)
   companyId: number;
 }

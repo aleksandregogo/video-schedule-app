@@ -1,4 +1,4 @@
-export enum LocationStatus {
+export enum ScreenStatus {
   ON = 'ON',
   OFF = 'OFF',
 }

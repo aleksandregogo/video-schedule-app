@@ -1,24 +1,36 @@
-import React, { useState } from "react";
-import { ScheduleData } from "../scheduler/scheduler";
 import { APIClient } from "@/services/APIClient";
+import React, { useRef } from "react";
 
-type UploaderProps = {
-  scheduleData: ScheduleData
-}
+type FileUploaderProps = {
+  ownerId: number; // General identifier for the upload (e.g., campaignId, screenId, etc.)
+  uploadEndpoint: string; // API endpoint to request the upload URL
+  completeEndpoint: string; // API endpoint to notify backend after successful upload
+  onComplete?: (key: string) => void; // Callback after upload completion
+  children: React.ReactNode; // Custom UI elements to trigger the upload
+};
 
-// interface OwnerData {}
+const FileUploader: React.FC<FileUploaderProps> = ({
+  ownerId,
+  uploadEndpoint,
+  completeEndpoint,
+  onComplete,
+  children,
+}) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-// const FILE_UPLOAD_OWNER = 
-
-const FileUploader = ({ scheduleData }: UploaderProps) => {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploadStatus, setUploadStatus] = useState("");
-
-  const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/mpeg", "audio/mp4", "audio/mpeg"];
-  const maxSize = 524288000;
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "video/mp4",
+    "video/mpeg",
+    "audio/mp4",
+    "audio/mpeg",
+  ];
+  const maxSize = 524288000; // 500MB
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files ? e.target.files[0] : null;
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > maxSize) {
@@ -31,81 +43,86 @@ const FileUploader = ({ scheduleData }: UploaderProps) => {
       return;
     }
 
-    setFile(file)
-  };
+    try {
+      const response = await APIClient.post(uploadEndpoint, {
+        ownerId,
+        size: file.size,
+        mimeType: file.type
+      })
 
-  const uploadFile = async () => {
-    if (!file) {
-      alert("Please select a file.");
-      return;
-    }
+      if (!response) {
+        throw new Error("Failed to request upload URL");
+      }
 
-    APIClient.post('/schedule/media/upload-request', {
-      campaignId: scheduleData.id,
-      size: file.size,
-      mimeType: file.type
-    })
-      .then((response) => {
-        const {
-          uploadUrl,
-          key,
-          campaignId
-        } = response.data.data;
+      const { uploadUrl, key } = response.data.data;
 
-        console.log({
-          uploadUrl,
-          key,
-          campaignId
+      if (uploadUrl) {
+
+
+        const uploaded = await APIClient.put(uploadUrl, file, {
+          headers: {
+            "Content-Type": file.type
+          },
+          withCredentials: false,
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          },
         });
-        
-        if (uploadUrl) {
-          setUploadStatus("Uploading...");
 
-          APIClient.put(uploadUrl, file, {
-            headers: {
-              "Content-Type": file.type
-            },
-            withCredentials: false,
-            onUploadProgress: (progressEvent) => {
-              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              setUploadStatus(`Uploading: ${progress}%`);
-            },
-          })
-            .then(() => {
-              APIClient.post('/schedule/media/upload-complete', {
-                campaignId: scheduleData.id,
-                size: file.size,
-                mimeType: file.type,
-                key
-              })
-                .then(() => {
-                  setUploadStatus(`Upload Completed`);
-                  setFile(null);
-                })
-                .catch((error) => {
-                  setUploadStatus(`Error: ${error.message}`);
-                })
-            })
-            .catch((error) => {
-              setUploadStatus(`Error: ${error.message}`);
-            })
-        } else {
-          setUploadStatus(`Error: upload url is not provided`);
+        if (!uploaded) {
+          throw new Error("Failed to upload file");
         }
-      })
-      .catch((error) => {
-        setUploadStatus(`Error: ${error.message}`);
-      })
+
+        const done = await APIClient.post(completeEndpoint, {
+          ownerId,
+          size: file.size,
+          mimeType: file.type,
+          key
+        });
+
+        if (!done) {
+          throw new Error("Failed to complete file upload");
+        }
+
+        const imageDownloadUrl = done.data?.imageDownloadUrl;
+
+        onComplete && imageDownloadUrl && onComplete(imageDownloadUrl);
+      }
+    } catch (error) {
+      console.error(`Upload failed: ${error.message}`);
+    } finally {
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }
   };
+
+  const triggerFileInput = () => {
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
+  };
+
+  const childrenWithOnClick = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      // Clone the element and attach the onClick handler
+      return React.cloneElement(child as React.ReactElement<any>, {
+        onClick: triggerFileInput,
+      });
+    }
+    return child;
+  });
 
   return (
-    <div>
-      <h2>File Uploader</h2>
-      <input type="file" onChange={(e) => handleFileChange(e)} />
-      <button onClick={uploadFile} disabled={!file}>
-        Upload
-      </button>
-      {uploadStatus && <p>{uploadStatus}</p>}
+    <div className="flex" onClick={triggerFileInput}>
+      <input
+        ref={inputRef}
+        type="file"
+        className="hidden"
+        accept={allowedMimeTypes.join(",")}
+        onChange={handleFileChange}
+      />
+      {childrenWithOnClick}
     </div>
   );
 };

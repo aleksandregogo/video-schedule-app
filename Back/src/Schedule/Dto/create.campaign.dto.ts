@@ -16,5 +16,5 @@ export class CreateCampaignDto {
   })
   @IsNumber()
   @IsNotEmpty()
-  locationId: number;
+  screenId: number;
 }
