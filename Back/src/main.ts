@@ -9,7 +9,7 @@ import { UserModule } from './User/user.module';
 import { AuthModule } from './Auth/auth.module';
 import cookieParser from 'cookie-parser';
 import { ScheduleModule } from './Schedule/schedule.module';
-import { LocationModule } from './Location/location.module';
+import { ScreenModule } from './Screen/screen.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log', 'error', 'warn', 'debug', 'verbose', 'fatal'] });
@@ -36,14 +36,14 @@ async function bootstrap() {
 }
 
 function createSwaggerDoc(app: INestApplication<any>) {
-  const options = new DocumentBuilder().setTitle('Gateway API').setVersion('1.0').addBearerAuth().build();
+  const options = new DocumentBuilder().setTitle('Adloop API').setVersion('1.0.0').build();
   try {
     const document = SwaggerModule.createDocument(app, options, {
       include: [
         UserModule,
         AuthModule,
         ScheduleModule,
-        LocationModule
+        ScreenModule
       ],
     });
 

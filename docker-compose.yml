@@ -1,17 +1,15 @@
 version: '3'
 services:
-  frontend:
-    build:
-      context: ./Front
-      dockerfile: Dockerfile
+  db:
+    image: postgres:15
     ports:
-      - "3000:3000"
+      - "5433:5432"
     environment:
-      - VITE_APP_DOMAIN=http://localhost:5000/api/v1
+      POSTGRES_USER: kukumala
+      POSTGRES_PASSWORD: abduljabarkhani
+      POSTGRES_DB: mvp-db
     volumes:
-      - ./Front:/app
-    depends_on:
-      - backend
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
     build:
@@ -34,16 +32,18 @@ services:
     depends_on:
       - db
 
-  db:
-    image: postgres:15
+  frontend:
+    build:
+      context: ./Front
+      dockerfile: Dockerfile
     ports:
-      - "5433:5432"
+      - "3000:3000"
     environment:
-      POSTGRES_USER: kukumala
-      POSTGRES_PASSWORD: abduljabarkhani
-      POSTGRES_DB: mvp-db
+      - VITE_APP_DOMAIN=http://localhost:5000/api/v1
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./Front:/app
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

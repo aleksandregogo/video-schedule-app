@@ -3,7 +3,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { APP_CONFIG, AppConfig } from '../Config/app.config';
 import { User } from 'src/Entities/user.entity';
 import { Company } from 'src/Entities/company.entity';
-import { Location } from 'src/Entities/location.entity';
+import { Screen } from 'src/Entities/screen.entity';
 import { Campaign } from 'src/Entities/campaign.entity';
 import { Media } from 'src/Entities/media.entity';
 
@@ -19,7 +19,7 @@ export const TypeormAsyncConfig: TypeOrmModuleAsyncOptions = {
       username: appConfig.db.username,
       password: appConfig.db.password,
       database: appConfig.db.database,
-      entities: [User, Location, Company, Campaign, Media],
+      entities: [User, Screen, Company, Campaign, Media],
       migrationsRun: false,
       synchronize: false,
       logging: true,

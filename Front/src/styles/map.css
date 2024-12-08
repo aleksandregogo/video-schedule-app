@@ -1,0 +1,30 @@
+/* Custom styles for Leaflet buttons */
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background-color: #4CAF50; /* Change to your desired color */
+  color: white;
+  border: none;
+  box-shadow: none;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background-color: #45a049; /* Hover effect color */
+}
+
+.leaflet-control {
+  border-radius: 8px; /* Optional: make buttons rounded */
+}
+/* Constrain the MapContainer's parent */
+.map-container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Constrain leaflet map elements */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+}

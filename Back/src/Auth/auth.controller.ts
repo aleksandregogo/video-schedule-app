@@ -64,10 +64,10 @@ export class AuthController {
   @Get('user')
   @UseGuards(AuthGuard('cookie'))
   async getUser(@Req() req: Request) {
-    const user = req.user as UserInfo;
+    const userInfo = req.user as UserInfo;
 
     return new SuccessResponseObjectDto({
-      data: new UserPresentation().present(user.user)
+      data: new UserPresentation().present(userInfo.user, userInfo.company)
     })
   }
 

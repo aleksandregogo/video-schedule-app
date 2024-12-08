@@ -1,14 +1,15 @@
 import { Routes, Route } from "react-router-dom";
-import Login from "./App/Pages/login";
-import Dashboard from "./App/Pages/dashboard";
+import Screens from "./pages/screens";
+import Layout from "./components/layout";
 
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Screens />} />
+        <Route path="/screens" element={<Screens />} />
+      </Route>
     </Routes>
   );
 }

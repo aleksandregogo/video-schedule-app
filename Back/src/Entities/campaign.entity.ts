@@ -1,8 +1,9 @@
 import { Entity, Column, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { Defentity } from './defentity.entity';
-import { Location } from './location.entity';
+import { Screen } from './screen.entity';
 import { Company } from './company.entity';
 import { User } from './user.entity';
+import { Media } from './media.entity';
 
 @Entity('campaign')
 export class Campaign extends Defentity  {
@@ -12,12 +13,12 @@ export class Campaign extends Defentity  {
   @Column({ type: "varchar", length: 100 })
   name: string;
 
-  @ManyToOne(() => Location, (location) => location.id, { nullable: false })
+  @ManyToOne(() => Screen, (screen) => screen.id, { nullable: false })
   @JoinColumn()
-  location: Location;
+  screen: Screen;
 
-  @RelationId((campaign: Campaign) => campaign.location)
-  locationId: number;
+  @RelationId((campaign: Campaign) => campaign.screen)
+  screenId: number;
 
   @ManyToOne(() => Company, (company) => company.id, { nullable: false })
   @JoinColumn()
@@ -32,4 +33,12 @@ export class Campaign extends Defentity  {
 
   @RelationId((campaign: Campaign) => campaign.user)
   userId: number;
+
+
+  @ManyToOne(() => Campaign, (media) => media.id)
+  @JoinColumn()
+  media: Media;
+
+  @RelationId((campaign: Campaign) => campaign.media)
+  mediaId: number;
 }

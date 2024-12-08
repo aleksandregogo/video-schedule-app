@@ -1,6 +1,5 @@
 import { Controller, Post, Body, HttpException, HttpStatus, UseGuards, Req } from "@nestjs/common";
 import { ScheduleService } from "./schedule.service";
-import { FileUploadRequestDto } from "./Dto/file.upload.request.dto";
 import { AuthGuard } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
 import { User } from "src/Entities/user.entity";
@@ -8,9 +7,10 @@ import { Request } from 'express';
 import { CreateCampaignDto } from "./Dto/create.campaign.dto";
 import { CampaignPresentation } from "./Presentation/campaign.presentation";
 import { SuccessResponseObjectDto } from "src/Response/SuccessResponseObject.dto";
-import { FileUploadCompleteDto } from "./Dto/file.upload.complete.dto";
 import { ApiTags } from "@nestjs/swagger";
 import { UserInfo } from "src/User/Interface/UserInfoInterface";
+import { FileUploadRequestDto } from "src/Storage/Dto/file.upload.request.dto";
+import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto";
 
 @Controller("schedule")
 @UseGuards(AuthGuard('cookie'))

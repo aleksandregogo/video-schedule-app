@@ -8,9 +8,6 @@ export class Media extends Defentity  {
   @Column({ type: "uuid", unique: true })
   uuid: string;
 
-  @Column({type: "bool", default: false})
-  uploadComplete: boolean;
-
   @Column({ type: 'varchar', length: 500 })
   key: string;
 
@@ -36,13 +33,6 @@ export class Media extends Defentity  {
     comment: 'Total duration of the composition.',
   })
   duration: number;
-
-  @ManyToOne(() => Campaign, (campaign) => campaign.id)
-  @JoinColumn()
-  campaign: Campaign;
-
-  @RelationId((media: Media) => media.campaign)
-  campaignId: number;
 
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn()
