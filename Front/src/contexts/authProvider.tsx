@@ -20,6 +20,7 @@ interface UserInfo {
 
 type AuthContextType = {
   user: UserInfo;
+  isCompany: boolean;
   logout: () => Promise<void>;
 }
 
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ user: userInfo, logout }}
+      value={{ user: userInfo, isCompany: !!userInfo?.company, logout }}
     >
       {loading ? <Spinner variant="fullsize" /> : children}
     </AuthContext.Provider>

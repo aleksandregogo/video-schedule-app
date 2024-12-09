@@ -1,3 +1,4 @@
+import { ScreenStatus } from "@/types/screen.enum";
 import React, { useState } from "react";
 
 export interface ScreenCreateDto {
@@ -5,7 +6,7 @@ export interface ScreenCreateDto {
   lat: number;
   lng: number;
   price: number;
-  status: string;
+  status: ScreenStatus;
 }
 
 type ScreenFormModalProps = {
@@ -24,7 +25,7 @@ const ScreenFormModal: React.FC<ScreenFormModalProps> = ({
     lat: defaultValues?.lat || 0,
     lng: defaultValues?.lng || 0,
     price: defaultValues?.price || 0,
-    status: defaultValues?.status || "ON",
+    status: defaultValues?.status || ScreenStatus.ON,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -99,8 +100,8 @@ const ScreenFormModal: React.FC<ScreenFormModalProps> = ({
               className="w-full border rounded px-3 py-2"
               required
             >
-              <option value="ON">ON</option>
-              <option value="OFF">OFF</option>
+              <option value={ScreenStatus.ON}>{ScreenStatus.ON}</option>
+              <option value={ScreenStatus.OFF}>{ScreenStatus.OFF}</option>
             </select>
           </div>
           <div className="flex justify-end">
