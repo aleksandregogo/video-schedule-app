@@ -5,9 +5,7 @@ import { Tv, SwatchBook, ImagePlay, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/authProvider";
 
 const Sidebar: React.FC = () => {
-  const { user, logout } = useAuth();
-
-  const isCompany = !!user.company;
+  const { isCompany, logout } = useAuth();
 
   return (
     <aside className="h-screen w-64 bg-gray-800 text-white">

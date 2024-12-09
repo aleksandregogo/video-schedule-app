@@ -14,6 +14,7 @@ import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto"
 import { ScreenCreateDto } from "./Dto/screen.create.dto";
 import { Screen } from "src/Entities/screen.entity"
 import { ScreenStatus } from "./Enum/screen.status.enum";
+import { ToggleScreenStatusDto } from "./Dto/toggle.screen.status.dto";
 
 @Injectable()
 export class ScreenService {
@@ -47,24 +48,45 @@ export class ScreenService {
         }
       });
   
-      const screenImageDownloadUrlPromises = screens.map(async (screen) => {
-        if (screen.imageBucket && screen.imageKey) {
-          screen.imageDownloadUrl = await this.commandBus.execute(
-            new GenerateDownloadUrlCommand({ bucket: screen.imageBucket, key: screen.imageKey })
-          );
-        }
-
-        return screen;
-      });
-  
-      return await Promise.all(screenImageDownloadUrlPromises).catch((err) => {
-        console.error('Error fetching screens or generating URLs:', err);
-        return [];
-      })
+      return await this.getScreensWithImageUrls(screens);
     } catch (err) {
       console.error('Error fetching screens or generating URLs:', err);
       return null;
     }
+  }
+
+  async getCompanyScreens(companyId: number): Promise<Screen[] | null> {
+    try {
+      const screens = await this.screenRepository.find({
+        where: {
+          company: {
+            id: Equal(companyId)
+          }
+        }
+      });
+  
+      return await this.getScreensWithImageUrls(screens); 
+    } catch (err) {
+      console.error('Error fetching screens or generating URLs:', err);
+      return null;
+    }
+  }
+
+  async getScreensWithImageUrls(screens: Screen[]) {
+    const screenImageDownloadUrlPromises = screens.map(async (screen) => {
+      if (screen.imageBucket && screen.imageKey) {
+        screen.imageDownloadUrl = await this.commandBus.execute(
+          new GenerateDownloadUrlCommand({ bucket: screen.imageBucket, key: screen.imageKey })
+        );
+      }
+
+      return screen;
+    });
+
+    return await Promise.all(screenImageDownloadUrlPromises).catch((err) => {
+      console.error('Error fetching screens or generating URLs:', err);
+      return [];
+    })
   }
 
   async findScreenById(id: number): Promise<Screen | null> {
@@ -82,6 +104,62 @@ export class ScreenService {
       })
   }
 
+  async toggleScreenStatus(user: UserInfo, screenId: number, toggleScreenStatusDto: ToggleScreenStatusDto) {
+    const screen = await this.findScreenById(screenId);
+
+    if (!screen) {
+      throw new BadRequestException(`Screen not found with id: ${screenId}`);
+    } else if (screen?.company?.id !== user?.company?.id) {
+      throw new BadRequestException(`You don't have permissions to toggle screen status`);
+    } else if (screen.status === toggleScreenStatusDto.status) {
+      throw new BadRequestException(`Screen status is already: ${toggleScreenStatusDto.status}`);
+    }
+
+    const updatedScreen = await this.screenRepository.update({
+      id: Equal(screenId),
+      company: {
+        id: Equal(user.company.id)
+      }
+    }, {
+      status: toggleScreenStatusDto.status,
+    })
+      .catch((err) => {
+        console.log(err);
+        return null;
+      });
+
+    if (!updatedScreen) {
+      throw new BadRequestException('Something went wrong while updating DB');
+    }
+
+    return updatedScreen;
+  }
+
+  async deleteScreen(user: UserInfo, screenId: number) {
+    const screen = await this.findScreenById(screenId);
+
+    if (!screen) {
+      throw new BadRequestException(`Screen not found with id: ${screenId}`);
+    } else if (screen?.company?.id !== user?.company?.id) {
+      throw new BadRequestException(`You don't have permissions to delete screen`);
+    }
+
+    const deletedScreen = await this.screenRepository.delete({
+      id: Equal(screenId),
+      company: {
+        id: Equal(user.company.id)
+      }
+    })
+      .catch((err) => {
+        console.log(err);
+        return null;
+      });
+
+    if (!deletedScreen) {
+      throw new BadRequestException('Something went wrong while updating DB');
+    }
+  }
+
   async generateUploadUrl(user: UserInfo, fileUploadDto: FileUploadRequestDto) {
     const { ownerId, mimeType, size } = fileUploadDto;
 
@@ -97,6 +175,8 @@ export class ScreenService {
 
     if (!screen) {
       throw new HttpException(`Screen with id: ${ownerId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    } else if (screen?.company?.id !== user?.company?.id) {
+      throw new BadRequestException(`You don't have permissions to toggle screen status`);
     }
 
     const fileFormat = mimeType.split('/')[1];
@@ -147,5 +227,39 @@ export class ScreenService {
     );
 
     return { message: "Upload marked as complete", imageDownloadUrl  };
+  }
+
+  async deleteScreenPhoto(user: UserInfo, screenId: number) {
+    const screen = await this.findScreenById(screenId);
+
+    if (!screen) {
+      throw new BadRequestException(`Screen not found with id: ${screenId}`);
+    } else if (screen?.company?.id !== user?.company?.id) {
+      throw new BadRequestException(`You don't have permissions to delete screen photo`);
+    } else if (!screen.imageKey || !screen.imageBucket) {
+      throw new BadRequestException(`Screen doesn't have photo to delete`);
+    }
+
+    await this.commandBus.execute(
+      new DeleteFileCommand({ bucket: screen.imageBucket, key: screen.imageKey })
+    );
+
+    const updatedScreen = await this.screenRepository.update({
+      id: Equal(screenId),
+      company: {
+        id: Equal(user.company.id)
+      }
+    }, {
+      imageKey: null,
+      imageBucket: null
+    })
+      .catch((err) => {
+        console.log(err);
+        return null;
+      });
+
+    if (!updatedScreen) {
+      throw new BadRequestException('Something went wrong while updating DB');
+    }
   }
 }

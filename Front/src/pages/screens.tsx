@@ -4,11 +4,13 @@ import { MapPin, GalleryHorizontal, Plus } from "lucide-react";
 import ScreensGalleryView from "@/components/screens-gallery-view";
 import ScreensMapView from "@/components/screens-map-view";
 import ScreenFormModal from "@/components/screen-form-modal";
+import { useAuth } from "@/contexts/authProvider";
+import { ScreenStatus } from "@/types/screen.enum";
 
 export interface ScreenView {
   id: number;
   name: string;
-  status: string;
+  status: ScreenStatus;
   lat: number;
   lng: number;
   imageDownloadUrl?: string;
@@ -17,28 +19,39 @@ export interface ScreenView {
 }
 
 const Screens = () => {
+  const { user, isCompany } = useAuth();
+
   const [isGalleryView, setIsGalleryView] = useState(true);
   const [screens, setScreens] = useState<ScreenView[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [defaultScreenValues, setDefaultScreenValues] = useState<Partial<ScreenView> | null>(null);
 
   const fetchScreens = () => {
-    APIClient.get("/screen/all")
+    const endpoint = isCompany && user?.company.id ? `/screen/${user.company.id}` : '/screen/all'
+
+    APIClient.get(endpoint)
       .then((response) => {
-        const data = response.data.data.map(
-          (screen: ScreenView) =>
-            ({
-              id: screen.id,
-              name: screen.name,
-              status: screen.status,
-              lat: screen.lat,
-              lng: screen.lng,
-              imageDownloadUrl: screen.imageDownloadUrl,
-              price: screen.price,
-              companyId: screen.companyId,
-            } as ScreenView)
-        );
-        setScreens(data);
+        const screens = response.data.data as ScreenView[];
+
+        if (screens) {
+          screens.sort((a, b) => a.id - b.id);
+
+          const data = screens.map(
+            (screen: ScreenView) =>
+              ({
+                id: screen.id,
+                name: screen.name,
+                status: screen.status,
+                lat: screen.lat,
+                lng: screen.lng,
+                imageDownloadUrl: screen.imageDownloadUrl,
+                price: screen.price,
+                companyId: screen.companyId,
+              } as ScreenView)
+          );
+
+          setScreens(data);
+        }
       })
       .catch((err) => {
         console.error("Error fetching screens:", err);
@@ -80,20 +93,30 @@ const Screens = () => {
     );
   }
 
-  const handleToggleStatus = (screenId: number, newStatus: string) => {
-    console.log(screenId);
-    // setScreens((prevScreens) =>
-    //   prevScreens.map((screen) =>
-    //     screen.id === screenId ? { ...screen, status: newStatus } : screen
-    //   )
-    // );
+  const handleToggleStatus = (screenId: number, newStatus: ScreenStatus) => {
+    APIClient.put(`/screen/${screenId}/status`, {
+      status: newStatus
+    })
+      .then(() => fetchScreens())
+      .catch((err) => {
+        console.error("Error fetching screens:", err);
+      });
   };
   
   const handleDelete = (screenId: number) => {
-    console.log(screenId);
-    // setScreens((prevScreens) =>
-    //   prevScreens.filter((screen) => screen.id !== screenId)
-    // );
+    APIClient.delete(`/screen/${screenId}`)
+      .then(() => fetchScreens())
+      .catch((err) => {
+        console.error("Error fetching screens:", err);
+      });
+  };
+
+  const handleDeleteImage = (screenId: number) => {
+    APIClient.delete(`/screen/media/${screenId}`)
+      .then(() => fetchScreens())
+      .catch((err) => {
+        console.error("Error fetching screens:", err);
+      });
   };
 
   return (
@@ -120,7 +143,7 @@ const Screens = () => {
             Map View
           </button>
         </div>
-        <button
+        {isCompany && <button
           onClick={() => {
             setDefaultScreenValues(null); // Reset default values for a fresh modal
             setIsModalOpen(true);
@@ -129,7 +152,7 @@ const Screens = () => {
         >
           <Plus className="w-5 h-5" />
           Add Screen
-        </button>
+        </button>}
       </div>
 
       {/* Render Gallery or Map */}
@@ -140,6 +163,7 @@ const Screens = () => {
             onImageUpload={handleScreenImageChange}
             onToggleStatus={handleToggleStatus}
             onDelete={handleDelete}
+            onDeleteImage={handleDeleteImage}
           />
         ) : (
           <ScreensMapView
