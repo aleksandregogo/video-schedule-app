@@ -6,7 +6,12 @@ import ScreensMapView from "@/components/screens-map-view";
 import ScreenFormModal from "@/components/screen-form-modal";
 import { useAuth } from "@/contexts/authProvider";
 import { ScreenStatus } from "@/types/screen.enum";
-
+interface TimeSlot {
+  title?: string;
+  start: string;
+  end: string;
+  color?: string;
+}
 export interface ScreenView {
   id: number;
   name: string;
@@ -16,6 +21,7 @@ export interface ScreenView {
   imageDownloadUrl?: string;
   price: number;
   companyId: number;
+  availableTimeSlots: TimeSlot[]
 }
 
 const Screens = () => {
