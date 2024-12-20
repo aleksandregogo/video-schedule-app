@@ -1,14 +1,20 @@
-export interface Reservation extends SelectedTime {
-  id: string;
-  title: string;
-  backgroundColor: string;
-  isNew: boolean;
+export interface Reservation extends SelectedSlotInfo {
+  id?: number;
+  status?: ReservationStatus;
+  canEdit: boolean;
 };
-  
-export type SelectedTime = {
-  start: string;
-  end: string;
-};
+
+export enum ReservationStatus {
+  CONFIRMED = 'CONFIRMED',
+  REJECTED = 'REJECTED',
+  PENDING = 'PENDING',
+  CANCELLED = 'CANCELLED'
+}
+
+export interface SelectedSlotInfo extends CalendarEvent {
+  backgroundColor?: string;
+  title?: string;
+}
 
 export type CalendarEvent = {
   start: string;

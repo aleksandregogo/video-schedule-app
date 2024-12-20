@@ -3,14 +3,14 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useRef } from "react";
 import "@/styles/calendar.css";
-import { CalendarEvent, Reservation, SelectedTime } from "../screen/modals/types";
+import { Reservation, CalendarEvent } from "../screen/modals/types";
 
 type Props = {
   screen: { name: string; };
   reservations: Reservation[];
   zoomIndex: number;
   onZoomChange: (index: number) => void;
-  onSlotSelect: (selectedTime: SelectedTime) => void;
+  onSlotSelect: (calendarEvent: CalendarEvent) => void;
   onEventClick: (reservation: Reservation) => void;
   onNextStep: () => void; // Callback for the Next Step button
 };
@@ -41,12 +41,6 @@ const FullCalendarWrapper = ({
   const handleNext = () => {
     calendarRef.current?.getApi().next();
   };
-
-  const events: CalendarEvent[] = reservations.map((slot) => ({
-    start: slot.start,
-    end: slot.end,
-    backgroundColor: slot.backgroundColor,
-  }));
 
   return (
     <div className="relative h-full w-full">
@@ -101,7 +95,12 @@ const FullCalendarWrapper = ({
           initialView={currentZoom.name}
           key={currentZoom.name + currentZoom.slotDuration}
           headerToolbar={false} // Disable FullCalendar's default header
-          events={events}
+          events={reservations.map((slot) => ({
+            id: slot.id,
+            start: slot.start,
+            end: slot.end,
+            backgroundColor: slot.backgroundColor
+          })) as any}
           allDaySlot={false}
           slotDuration={currentZoom.slotDuration}
           slotLabelInterval={currentZoom.slotDuration}
@@ -116,9 +115,10 @@ const FullCalendarWrapper = ({
           }
           eventClick={(info) => {
             const reservation = reservations.find(
-              (res) => res.id === info.event.id
+              (res) => res.id === parseInt(info.event.id)
             );
-            if (reservation) onEventClick(reservation);
+            console.log("onclik", reservation)
+            if (reservation && reservation.canEdit) onEventClick(reservation);
           }}
           height="100%"
           contentHeight="auto"

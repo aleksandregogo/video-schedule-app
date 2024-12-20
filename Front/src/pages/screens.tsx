@@ -6,7 +6,6 @@ import ScreensMapView from "@/components/screen/screens-map-view";
 import ScreenFormModal from "@/components/screen/modals/screen-form-modal";
 import { useAuth } from "@/contexts/authProvider";
 import { ScreenStatus } from "@/types/screen.enum";
-import { Reservation } from "@/components/screen/modals/types";
 export interface ScreenView {
   id: number;
   name: string;
@@ -16,11 +15,10 @@ export interface ScreenView {
   imageDownloadUrl?: string;
   price: number;
   companyId: number;
-  reservations: Reservation[]
 }
 
 const Screens = () => {
-  const { user, isCompany } = useAuth();
+  const { isCompany } = useAuth();
 
   const [isGalleryView, setIsGalleryView] = useState(true);
   const [screens, setScreens] = useState<ScreenView[]>([]);
@@ -28,7 +26,7 @@ const Screens = () => {
   const [defaultScreenValues, setDefaultScreenValues] = useState<Partial<ScreenView> | null>(null);
 
   const fetchScreens = () => {
-    const endpoint = isCompany && user?.company.id ? `/screen/${user.company.id}` : '/screen/all'
+    const endpoint = isCompany ? `/screen/all-company` : '/screen/all'
 
     APIClient.get(endpoint)
       .then((response) => {
@@ -47,12 +45,7 @@ const Screens = () => {
                 lng: screen.lng,
                 imageDownloadUrl: screen.imageDownloadUrl,
                 price: screen.price,
-                companyId: screen.companyId,
-                reservations: [
-                  // TODO: temp for testing.
-                  { start: "2024-12-20T09:00:00", end: "2024-12-20T10:00:00", backgroundColor: "#f87171", isNew: false },
-                  { start: "2024-12-20T12:00:00", end: "2024-12-20T13:00:00", backgroundColor: "#f87171", isNew: false }
-                ]
+                companyId: screen.companyId
               } as ScreenView)
           );
 

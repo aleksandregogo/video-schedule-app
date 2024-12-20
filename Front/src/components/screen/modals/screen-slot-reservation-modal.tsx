@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom";
 import { useEffect, useState } from "react";
 import { formatDateTimeLocal, parseDateTimeLocal } from "@/lib/utils";
+import { Reservation, SelectedSlotInfo } from "./types";
 
 type Props = {
-  reservation: { id?: string; title?: string; start: string; end: string } | null;
-  onSave: (reservation: { id: string; title: string; start: string; end: string }) => void;
-  onDelete: (id: string) => void;
+  reservation: Reservation | null;
+  onSave: (reservation: Reservation) => void;
+  onDelete: (id: number) => void;
   onClose: () => void;
 };
 
@@ -26,10 +27,12 @@ const ReservationModal = ({ reservation, onSave, onDelete, onClose }: Props) => 
   const handleSave = () => {
     if (!title.trim() || !start || !end) return;
     onSave({
-      id: reservation?.id || "",
+      id: reservation?.id || null,
       title,
       start: parseDateTimeLocal(start),
       end: parseDateTimeLocal(end),
+      backgroundColor: '#eab308',
+      canEdit: true
     });
   };
 

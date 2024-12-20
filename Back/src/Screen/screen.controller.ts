@@ -36,7 +36,7 @@ export class ScreenController {
       errorCode: 0,
     }, HttpStatus.BAD_REQUEST)
 
-    return new ScreenPresentation().present(createdScreen);
+    return new ScreenPresentation().presentScreen(createdScreen);
   }
 
   @ApiOperation({summary: 'Get all screens'})
@@ -56,24 +56,21 @@ export class ScreenController {
 
   @ApiOperation({summary: 'Get Company screens'})
   @UseGuards(AuthGuard('cookie'))
-  @Get(':id')
-  async getCompanyScreens(
-    @Req() req: Request,
-    @Param('id', ParseIntPipe) id: number
-  ) {
+  @Get('/all-company')
+  async getCompanyScreens(@Req() req: Request) {
     const userInfo = req.user as UserInfo;
 
-    if (!userInfo.company) {
+    if (!userInfo.company?.id) {
       throw new HttpException({
         message: 'Access denied.',
         errorCode: 0,
       }, HttpStatus.UNAUTHORIZED)
     }
 
-    const screens = await this.screenService.getCompanyScreens(id);
+    const screens = await this.screenService.getCompanyScreens(userInfo.company.id);
 
     if (!screens) throw new HttpException({
-      message: `Error on selecting company screens with id: ${id}`,
+      message: `Error on selecting company screens with id: ${userInfo.company.id}`,
       errorCode: 0,
     }, HttpStatus.BAD_REQUEST)
 
@@ -81,6 +78,44 @@ export class ScreenController {
       data: new ScreenPresentation().presentList(screens)
     });
   }
+
+  @ApiOperation({summary: 'Get screen reservations'})
+  @Get(':id/reservations')
+  async getScreenReservations(@Param('id', ParseIntPipe) id: number) {
+    const reservations = await this.screenService.getScreenReservations(id);
+
+    if (!reservations) throw new HttpException({
+      message: `Error on selecting reservations for screen with id: ${id}`,
+      errorCode: 0,
+    }, HttpStatus.BAD_REQUEST)
+
+    return new SuccessResponseObjectDto({
+      data: new ScreenPresentation().presentScreenReservations(reservations)
+    });
+  }
+
+  // @ApiOperation({summary: 'Create screen'})
+  // @Post(':id/reservations')
+  // @UseGuards(AuthGuard('cookie'))
+  // async addReservation(@Req() req, @Body() screenCreateDto: ScreenCreateDto) {
+  //   const user = req.user as UserInfo;
+
+  //   if (!user.company) {
+  //     throw new HttpException({
+  //       message: 'Access denied.',
+  //       errorCode: 0,
+  //     }, HttpStatus.UNAUTHORIZED)
+  //   }
+
+  //   const createdScreen = await this.screenService.createScreen(user, screenCreateDto);
+
+  //   if (!createdScreen) throw new HttpException({
+  //     message: 'Screen creation error',
+  //     errorCode: 0,
+  //   }, HttpStatus.BAD_REQUEST)
+
+  //   return new ScreenPresentation().presentScreen(createdScreen);
+  // }
 
   @ApiOperation({summary: 'Toggle screen status'})
   @Put(':id/status')
@@ -106,7 +141,7 @@ export class ScreenController {
       errorCode: 0,
     }, HttpStatus.BAD_REQUEST)
 
-    return new ScreenPresentation().present(updatedScreen);
+    return new ScreenPresentation().presentScreen(updatedScreen);
   }
 
   @ApiOperation({summary: 'Delete screen'})
