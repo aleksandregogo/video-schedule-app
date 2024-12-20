@@ -1,22 +1,27 @@
-import { cn } from "@/lib/utils"; // Ensure this points to your utility
+import { cn } from "@/lib/utils";
 import React from "react";
 
-const Button = React.forwardRef<
-  React.ElementRef<"button">,
-  React.ComponentPropsWithoutRef<"button"> & { variant?: string }
->(({ className, variant = "default", ...props }, ref) => (
-  <button
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
-      variant === "destructive" && "bg-red-500 text-white hover:bg-red-600",
-      variant === "default" && "bg-blue-500 text-white hover:bg-blue-600",
-      className
-    )}
-    {...props}
-  />
-));
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "default" | "outline" | "destructive";
+};
 
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          "px-4 py-2 text-sm font-medium rounded-md focus:ring-2 focus:ring-offset-2",
+          variant === "default" && "bg-blue-500 text-white hover:bg-blue-600",
+          variant === "outline" &&
+            "border border-gray-300 text-gray-700 hover:bg-gray-100",
+          variant === "destructive" &&
+            "bg-red-500 text-white hover:bg-red-600",
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
 Button.displayName = "Button";
-
-export { Button };

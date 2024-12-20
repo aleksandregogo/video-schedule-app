@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Image, Camera, Trash2, CalendarPlus } from "lucide-react";
-import FileUploader from "./file-uploader";
+import FileUploader from "../file-uploader";
 import { ScreenView } from "@/pages/screens";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/authProvider";
 import { ScreenStatus } from "@/types/screen.enum";
 import ConfirmationModal from "@/components/ui/confirmation-modal"; 
-import ScreenTimeSlotsModal from "./screen-time-slots-modal";
+import ScreenTimeSlotsModal from "./modals/screen-time-slots-modal";
+import "@/styles/calendar.css";
 
 type ScreensGalleryViewProps = {
   screens: ScreenView[];

@@ -41,7 +41,7 @@
 
 /* Event styling */
 .fc-event {
-  background-color: #22c55e !important; /* Tailwind green-500 */
+  background-color: #eab308; /* Tailwind green-500 */
   color: white !important;
   border: none;
   border-radius: 0.375rem; /* Rounded edges */

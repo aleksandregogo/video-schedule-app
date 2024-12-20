@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
 import { APIClient } from "@/services/APIClient";
 import { MapPin, GalleryHorizontal, Plus } from "lucide-react";
-import ScreensGalleryView from "@/components/screens-gallery-view";
-import ScreensMapView from "@/components/screens-map-view";
-import ScreenFormModal from "@/components/screen-form-modal";
+import ScreensGalleryView from "@/components/screen/screens-gallery-view";
+import ScreensMapView from "@/components/screen/screens-map-view";
+import ScreenFormModal from "@/components/screen/modals/screen-form-modal";
 import { useAuth } from "@/contexts/authProvider";
 import { ScreenStatus } from "@/types/screen.enum";
-interface TimeSlot {
-  title?: string;
-  start: string;
-  end: string;
-  color?: string;
-}
+import { Reservation } from "@/components/screen/modals/types";
 export interface ScreenView {
   id: number;
   name: string;
@@ -21,7 +16,7 @@ export interface ScreenView {
   imageDownloadUrl?: string;
   price: number;
   companyId: number;
-  availableTimeSlots: TimeSlot[]
+  reservations: Reservation[]
 }
 
 const Screens = () => {
@@ -53,6 +48,11 @@ const Screens = () => {
                 imageDownloadUrl: screen.imageDownloadUrl,
                 price: screen.price,
                 companyId: screen.companyId,
+                reservations: [
+                  // TODO: temp for testing.
+                  { start: "2024-12-20T09:00:00", end: "2024-12-20T10:00:00", backgroundColor: "#f87171", isNew: false },
+                  { start: "2024-12-20T12:00:00", end: "2024-12-20T13:00:00", backgroundColor: "#f87171", isNew: false }
+                ]
               } as ScreenView)
           );
 
