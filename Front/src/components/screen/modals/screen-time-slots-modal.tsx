@@ -7,6 +7,7 @@ import { Reservation, ReservationStatus, CalendarEvent } from "./types";
 import { ScreenView } from "@/pages/screens";
 import { APIClient } from "@/services/APIClient";
 import { formatDateTimeLocal } from "@/lib/utils";
+import Schedule from "@/components/schedule/schedule";
 
 type Props = {
   screen: ScreenView;
@@ -19,6 +20,9 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
+
+  const [viewStep, setViewStep] = useState<number>(0);
+  const [campaignTitle, setCampaignTitle] = useState<string>('');
 
   const { toast } = useToast();
 
@@ -106,27 +110,39 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
     setReservationModalOpen(false);
   };
 
+  const handleCreateCampaign = () => {
+    console.log(campaignTitle, reservations);
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTitle hidden></DialogTitle>
       <DialogContent className="w-full max-w-[90vw] h-[90vh] p-0 rounded-lg shadow-lg bg-white">
-        {/* Calendar with Integrated Header */}
-        <div className="h-full">
-          <FullCalendarWrapper
-            screen={screen}
-            reservations={reservations}
-            zoomIndex={zoomIndex}
-            onZoomChange={handleViewChange}
-            onSlotSelect={handleSlotSelect}
-            onEventClick={(reservation) => {
-              setSelectedReservation(reservation);
-              setReservationModalOpen(true);
-            }}
-            onNextStep={() => {
-              alert("Next step logic triggered!");
-            }}
+        {viewStep === 0 ? (
+          <div className="h-full">
+            <FullCalendarWrapper
+              screen={screen}
+              reservations={reservations}
+              zoomIndex={zoomIndex}
+              onZoomChange={handleViewChange}
+              onSlotSelect={handleSlotSelect}
+              onEventClick={(reservation) => {
+                setSelectedReservation(reservation);
+                setReservationModalOpen(true);
+              }}
+              onNextStep={() => setViewStep(1)}
+            />
+          </div>
+        ) : (
+          <Schedule
+            selectedReservations={reservations}
+            setReservations={(reservations) => setReservations(reservations)}
+            setTitle={(title) => setCampaignTitle(title)}
+            title={campaignTitle}
+            handleCreate={handleCreateCampaign}
+            onPreviousStep={() => setViewStep(0)}
           />
-        </div>
+        )}
       </DialogContent>
 
       {/* Reservation Modal */}

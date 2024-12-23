@@ -2,6 +2,7 @@ export interface Reservation extends SelectedSlotInfo {
   id?: number;
   status?: ReservationStatus;
   canEdit: boolean;
+  confirmed?: boolean;
 };
 
 export enum ReservationStatus {

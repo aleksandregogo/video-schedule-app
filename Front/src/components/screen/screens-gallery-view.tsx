@@ -25,7 +25,7 @@ const ScreensGalleryView = ({
   onDelete,
   onDeleteImage,
 }: ScreensGalleryViewProps) => {
-  const { isCompany } = useAuth();
+  const { user, isCompany } = useAuth();
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [screenModalOpen, setScreenModalOpen] = useState(false);
@@ -135,13 +135,13 @@ const ScreensGalleryView = ({
                 </Button>}
               </div>
             ) : (
-              <Button
+              user && (<Button
                   onClick={() => handleBook(screen)}
                   className="flex items-center gap-2"
               >
                 <CalendarPlus className="w-5 h-5" />
                 Book
-              </Button>
+              </Button>)
             )}
           </div>
         ))}
