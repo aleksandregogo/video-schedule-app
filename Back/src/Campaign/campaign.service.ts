@@ -17,10 +17,10 @@ import { Company } from "src/Entities/company.entity";
 import { FileUploadRequestDto } from "src/Storage/Dto/file.upload.request.dto";
 import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto";
 import { Reservation } from "src/Entities/reservation.entity";
-import { ReservationStatus } from "src/Screen/Enum/reservation.status.enum";
+import { ReservationStatus } from "src/Reservations/Enum/reservation.status.enum";
 
 @Injectable()
-export class ScheduleService {
+export class CampaignService {
   constructor(
     private readonly configService: ConfigService,
     private commandBus: CommandBus,
@@ -73,6 +73,27 @@ export class ScheduleService {
     }
 
     return savedCampaign;
+  }
+
+  async getAllCampaigns(user: User): Promise<Campaign[]> {
+    return await this.campaignRepository.find({
+      where: {
+        user: { id: Equal(user.id) }
+      },
+      relations: {
+        screen: true
+      }
+    })
+    .catch((err) => {
+      console.error("Error in getAllCampaigns", err);
+      return [];
+    })
+  }
+
+  async getCampaignReservations(user: User, campaignId: number): Promise<Reservation[]> {
+
+    
+    return []
   }
 
   async generateUploadUrl(user: UserInfo, fileUploadRequestDto: FileUploadRequestDto) {

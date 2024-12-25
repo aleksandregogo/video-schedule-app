@@ -9,11 +9,22 @@ const Layout: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex h-screen">
+      {/* Header for unauthenticated users */}
       {!user && <Header />}
-      <div className="flex flex-1">
-        {user && <Sidebar />}
-        <main className="flex-1 bg-gray-100 overflow-auto">
+
+      {/* Sidebar */}
+      {user && (
+        <aside className="w-64 bg-gray-800 text-white fixed h-full">
+          <Sidebar />
+        </aside>
+      )}
+
+      {/* Main Content */}
+      <div
+        className={`flex-1 ${user ? "ml-64" : ""} bg-gray-100 overflow-y-auto`}
+      >
+        <main className="p-6">
           <Outlet />
         </main>
         <Toaster />

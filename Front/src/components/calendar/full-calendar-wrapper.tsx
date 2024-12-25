@@ -3,7 +3,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useEffect, useRef, useState } from "react";
 import "@/styles/calendar.css";
-import { Reservation, CalendarEvent } from "../screen/modals/types";
+import { Reservation, CalendarEvent } from "../screen/types";
 
 type Props = {
   reservations: Reservation[];

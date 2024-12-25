@@ -16,7 +16,7 @@ import { Screen } from "src/Entities/screen.entity"
 import { ScreenStatus } from "./Enum/screen.status.enum";
 import { ToggleScreenStatusDto } from "./Dto/toggle.screen.status.dto";
 import { Reservation } from "src/Entities/reservation.entity";
-import { ReservationStatus } from "./Enum/reservation.status.enum";
+import { ReservationStatus } from "../Reservations/Enum/reservation.status.enum";
 
 @Injectable()
 export class ScreenService {

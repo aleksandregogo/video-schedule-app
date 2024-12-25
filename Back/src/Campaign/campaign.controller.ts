@@ -1,0 +1,91 @@
+import { Controller, Post, Body, HttpException, HttpStatus, UseGuards, Req, Get, Param, ParseIntPipe } from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import { Request } from 'express';
+import { CreateCampaignDto } from "./Dto/create.campaign.dto";
+import { CampaignPresentation } from "./Presentation/campaign.presentation";
+import { SuccessResponseObjectDto } from "src/Response/SuccessResponseObject.dto";
+import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import { UserInfo } from "src/User/Interface/UserInfoInterface";
+import { FileUploadRequestDto } from "src/Storage/Dto/file.upload.request.dto";
+import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto";
+import { CampaignService } from "./campaign.service";
+import { ReservationPresentation } from "src/Reservations/Presentation/reservation.presentation";
+
+@Controller("campaign")
+@UseGuards(AuthGuard('cookie'))
+@ApiTags('Campaign')
+export class CampaignController {
+  constructor(private readonly campaignService: CampaignService) {}
+
+  @Post()
+  async createCampaign(
+    @Req() req: Request,
+    @Body() createCampaignDto: CreateCampaignDto
+  ) {
+    const user = req.user as UserInfo;
+
+    const campaign = await this.campaignService.createCampaign(user.user, createCampaignDto);
+
+    return new CampaignPresentation().present(campaign);
+  }
+
+  @ApiOperation({summary: 'Get all campaigns'})
+  @Get('all')
+  async getCampaigns(@Req() req: Request) {
+    const userInfo = req.user as UserInfo;
+
+    const campaigns = await this.campaignService.getAllCampaigns(userInfo.user);
+
+    if (!campaigns) throw new HttpException({
+      message: 'Error on selecting all campaigns',
+      errorCode: 0,
+    }, HttpStatus.BAD_REQUEST)
+
+    return new SuccessResponseObjectDto({
+      data: new CampaignPresentation().presentList(campaigns)
+    });
+  }
+
+  @ApiOperation({summary: 'Get campaign reservations'})
+  @Get(':id/reservations')
+  async getCampaignReservations(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
+    const userInfo = req.user as UserInfo;
+
+    const reservations = await this.campaignService.getCampaignReservations(userInfo.user, id);
+
+    if (!reservations) throw new HttpException({
+      message: `Error on selecting reservations for campaign with id: ${id}`,
+      errorCode: 0,
+    }, HttpStatus.BAD_REQUEST)
+
+    return new SuccessResponseObjectDto({
+      data: new ReservationPresentation().presentList(reservations)
+    });
+  }
+
+  @Post("media/upload-request")
+  async getUploadUrl(
+    @Req() req: Request,
+    @Body() fileUploadRequestDto: FileUploadRequestDto
+  ) {
+    const user = req.user as UserInfo;
+
+    const data = await this.campaignService.generateUploadUrl(user, fileUploadRequestDto);
+
+    if (!data) {
+      throw new HttpException("Something went wrong", HttpStatus.BAD_REQUEST);
+    }
+
+    return new SuccessResponseObjectDto({ data });
+  }
+
+  @Post("media/upload-complete")
+  async uploadComplete(
+    @Req() req: Request,
+    @Body() fileUploadCompleteDto: FileUploadCompleteDto
+  ) {
+    const user = req.user as UserInfo;
+
+    return this.campaignService.markUploadComplete(user, fileUploadCompleteDto);
+  }
+}

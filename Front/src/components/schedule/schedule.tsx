@@ -1,5 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { Reservation } from "../screen/modals/types";
+import { Reservation } from "../screen/types";
 import { Button } from "../ui/button";
 import { formatDateTimeLocal } from "@/lib/utils";
 

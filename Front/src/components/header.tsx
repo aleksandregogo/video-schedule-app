@@ -12,7 +12,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-gray-100">
+    <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-100">
       <div className="flex gap-6">
         <div
           onClick={handleGoogleLogin}

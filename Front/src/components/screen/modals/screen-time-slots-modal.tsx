@@ -1,9 +1,9 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import FullCalendarWrapper from "@/components/calendar/full-calendar-wrapper";
 import ScreenSlotReservationModal from "@/components/screen/modals/screen-slot-reservation-modal";
 import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/ui/use-toast"; // Import ShadCN toast hook
-import { Reservation, ReservationStatus, CalendarEvent } from "./types";
+import { useToast } from "@/hooks/ui/use-toast";
+import { Reservation, ReservationStatus, CalendarEvent } from "../types";
 import { ScreenView } from "@/pages/screens";
 import { APIClient } from "@/services/APIClient";
 import { formatDateTimeLocal, parseDateTimeLocal } from "@/lib/utils";
@@ -134,7 +134,7 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
       return;
     }
 
-    APIClient.post(`/schedule/campaign`, {
+    APIClient.post(`/campaign`, {
       name: campaignTitle,
       screenId: screen.id,
       reservations: reservedTimes

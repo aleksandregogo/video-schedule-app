@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import ReactDOM from "react-dom";
 import { useEffect, useState } from "react";
 import { formatDateTimeLocal, parseDateTimeLocal } from "@/lib/utils";
-import { Reservation } from "./types";
+import { Reservation } from "../types";
 
 type Props = {
   reservation: Reservation | null;

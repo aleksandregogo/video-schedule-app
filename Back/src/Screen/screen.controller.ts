@@ -10,6 +10,7 @@ import { ScreenService } from './screen.service';
 import { ScreenCreateDto } from './Dto/screen.create.dto';
 import { ScreenPresentation } from './Presentation/screen.presentation';
 import { ToggleScreenStatusDto } from './Dto/toggle.screen.status.dto';
+import { ReservationPresentation } from 'src/Reservations/Presentation/reservation.presentation';
 
 @ApiTags('Screen')
 @Controller('screen')
@@ -90,7 +91,7 @@ export class ScreenController {
     }, HttpStatus.BAD_REQUEST)
 
     return new SuccessResponseObjectDto({
-      data: new ScreenPresentation().presentScreenReservations(reservations)
+      data: new ReservationPresentation().presentList(reservations)
     });
   }
 
