@@ -155,7 +155,7 @@ const Screens = () => {
       </div>
 
       {/* Render Gallery or Map */}
-      <div className="flex-1 p-4 relative h-[70vh]">
+      <div className="flex-1 p-4 relative h-[70vh] p-4">
         {isGalleryView ? (
           <ScreensGalleryView
             screens={screens}

@@ -94,29 +94,6 @@ export class ScreenController {
     });
   }
 
-  // @ApiOperation({summary: 'Create screen'})
-  // @Post(':id/reservations')
-  // @UseGuards(AuthGuard('cookie'))
-  // async addReservation(@Req() req, @Body() screenCreateDto: ScreenCreateDto) {
-  //   const user = req.user as UserInfo;
-
-  //   if (!user.company) {
-  //     throw new HttpException({
-  //       message: 'Access denied.',
-  //       errorCode: 0,
-  //     }, HttpStatus.UNAUTHORIZED)
-  //   }
-
-  //   const createdScreen = await this.screenService.createScreen(user, screenCreateDto);
-
-  //   if (!createdScreen) throw new HttpException({
-  //     message: 'Screen creation error',
-  //     errorCode: 0,
-  //   }, HttpStatus.BAD_REQUEST)
-
-  //   return new ScreenPresentation().presentScreen(createdScreen);
-  // }
-
   @ApiOperation({summary: 'Toggle screen status'})
   @Put(':id/status')
   @UseGuards(AuthGuard('cookie'))

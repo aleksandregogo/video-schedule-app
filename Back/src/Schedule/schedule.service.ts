@@ -16,6 +16,8 @@ import { Screen } from "src/Entities/screen.entity";
 import { Company } from "src/Entities/company.entity";
 import { FileUploadRequestDto } from "src/Storage/Dto/file.upload.request.dto";
 import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto";
+import { Reservation } from "src/Entities/reservation.entity";
+import { ReservationStatus } from "src/Screen/Enum/reservation.status.enum";
 
 @Injectable()
 export class ScheduleService {
@@ -24,11 +26,12 @@ export class ScheduleService {
     private commandBus: CommandBus,
     private readonly screenService: ScreenService,
     @InjectRepository(Campaign) private campaignRepository: Repository<Campaign>,
+    @InjectRepository(Reservation) private reservationRepository: Repository<Reservation>,
     @InjectRepository(Media) private mediaRepository: Repository<Media>
   ) {}
 
   async createCampaign(user: User, createCampaignDto: CreateCampaignDto) {    
-    const { screenId, name } = createCampaignDto;
+    const { screenId, name, reservations } = createCampaignDto;
 
     const screen = await this.screenService.findScreenById(screenId);
 
@@ -43,7 +46,33 @@ export class ScheduleService {
     campaign.screen = { id: screen.id } as Screen;
     campaign.company = { id: screen.company.id } as Company;
 
-    return await this.campaignRepository.save(campaign);
+    const savedCampaign = await this.campaignRepository.save(campaign);
+
+    if (!savedCampaign) {
+      throw new HttpException(`Something went wrong while creating campaign`, HttpStatus.BAD_REQUEST);
+    }
+
+    const reservationsToAdd: Reservation[] = [];
+
+    for (const reservation of reservations) {
+      const reservationToAdd = new Reservation();
+      reservationToAdd.name = reservation.name;
+      reservationToAdd.startTime = reservation.startTime;
+      reservationToAdd.endTime = reservation.endTime;
+      reservationToAdd.status = ReservationStatus.PENDING;
+      reservationToAdd.campaign = { id: savedCampaign.id } as Campaign;
+      reservationToAdd.screen = { id: screenId } as Screen;
+
+      reservationsToAdd.push(reservationToAdd);
+    }
+
+    const savedReservations = await this.reservationRepository.save(reservationsToAdd);
+
+    if (!savedReservations) {
+      throw new HttpException(`Something went wrong while saving reservations`, HttpStatus.BAD_REQUEST);
+    }
+
+    return savedCampaign;
   }
 
   async generateUploadUrl(user: UserInfo, fileUploadRequestDto: FileUploadRequestDto) {

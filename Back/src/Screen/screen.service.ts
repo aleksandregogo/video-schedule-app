@@ -17,7 +17,6 @@ import { ScreenStatus } from "./Enum/screen.status.enum";
 import { ToggleScreenStatusDto } from "./Dto/toggle.screen.status.dto";
 import { Reservation } from "src/Entities/reservation.entity";
 import { ReservationStatus } from "./Enum/reservation.status.enum";
-import { AddReservationDto } from "./Dto/add.reservation.dto";
 
 @Injectable()
 export class ScreenService {
@@ -75,18 +74,6 @@ export class ScreenService {
       console.error('Error fetching reservations', err);
       return null;
     }
-  }
-
-  async addReservation(user: UserInfo, addReservationDto: AddReservationDto): Promise<Reservation | null> {
-    const reservation = new Reservation();
-    reservation.name = addReservationDto.name;
-    reservation.status = ReservationStatus.PENDING;
-
-    return this.reservationRepository.save(reservation)
-      .catch((err) => {
-        console.error(err);
-        return null;
-      })
   }
 
   async getCompanyScreens(companyId: number): Promise<Screen[] | null> {

@@ -13,7 +13,7 @@ const Layout: React.FC = () => {
       {!user && <Header />}
       <div className="flex flex-1">
         {user && <Sidebar />}
-        <main className="flex-1 p-4 bg-gray-100 overflow-auto">
+        <main className="flex-1 bg-gray-100 overflow-auto">
           <Outlet />
         </main>
         <Toaster />

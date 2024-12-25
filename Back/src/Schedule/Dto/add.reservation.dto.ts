@@ -1,12 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsLatitude, IsLongitude, IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { ScreenStatus } from "../Enum/screen.status.enum";
-import { ReservationStatus } from "../Enum/reservation.status.enum";
+import { IsDateString, IsString } from "class-validator";
 
 export class AddReservationDto {
   @ApiProperty({
     type: String,
-    example: 'New Screen',
+    example: 'Book #1',
   })
   @IsString()
   name: string;
