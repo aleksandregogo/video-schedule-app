@@ -34,7 +34,6 @@ export class Campaign extends Defentity  {
   @RelationId((campaign: Campaign) => campaign.user)
   userId: number;
 
-
   @ManyToOne(() => Campaign, (media) => media.id)
   @JoinColumn()
   media: Media;

@@ -50,7 +50,11 @@ module.exports = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+		zIndex: {
+			1000: "1000",
+			1050: "1050",
+		},
   	}
   },
   plugins: [require('@tailwindcss/forms'), require("tailwindcss-animate")],

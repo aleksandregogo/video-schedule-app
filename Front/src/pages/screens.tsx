@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { APIClient } from "@/services/APIClient";
 import { MapPin, GalleryHorizontal, Plus } from "lucide-react";
-import ScreensGalleryView from "@/components/screens-gallery-view";
-import ScreensMapView from "@/components/screens-map-view";
-import ScreenFormModal from "@/components/screen-form-modal";
+import ScreensGalleryView from "@/components/screen/screens-gallery-view";
+import ScreensMapView from "@/components/screen/screens-map-view";
+import ScreenFormModal from "@/components/screen/modals/screen-form-modal";
 import { useAuth } from "@/contexts/authProvider";
 import { ScreenStatus } from "@/types/screen.enum";
-
 export interface ScreenView {
   id: number;
   name: string;
@@ -19,7 +18,7 @@ export interface ScreenView {
 }
 
 const Screens = () => {
-  const { user, isCompany } = useAuth();
+  const { isCompany } = useAuth();
 
   const [isGalleryView, setIsGalleryView] = useState(true);
   const [screens, setScreens] = useState<ScreenView[]>([]);
@@ -27,7 +26,7 @@ const Screens = () => {
   const [defaultScreenValues, setDefaultScreenValues] = useState<Partial<ScreenView> | null>(null);
 
   const fetchScreens = () => {
-    const endpoint = isCompany && user?.company.id ? `/screen/${user.company.id}` : '/screen/all'
+    const endpoint = isCompany ? `/screen/all-company` : '/screen/all'
 
     APIClient.get(endpoint)
       .then((response) => {
@@ -46,7 +45,7 @@ const Screens = () => {
                 lng: screen.lng,
                 imageDownloadUrl: screen.imageDownloadUrl,
                 price: screen.price,
-                companyId: screen.companyId,
+                companyId: screen.companyId
               } as ScreenView)
           );
 
@@ -156,7 +155,7 @@ const Screens = () => {
       </div>
 
       {/* Render Gallery or Map */}
-      <div className="flex-1 p-4 relative h-[70vh]">
+      <div className="flex-1 p-4 relative h-[70vh] p-4">
         {isGalleryView ? (
           <ScreensGalleryView
             screens={screens}

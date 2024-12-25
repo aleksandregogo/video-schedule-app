@@ -1,0 +1,84 @@
+/* Scrollbar for Webkit-based browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px; /* Vertical scrollbar width */
+  height: 8px; /* Horizontal scrollbar height */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Light gray track background */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888; /* Scrollbar thumb color */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Darker thumb color on hover */
+}
+
+/* Scrollbar for Firefox */
+* {
+  scrollbar-width: thin; /* Thin scrollbar */
+  scrollbar-color: #888 #f1f1f1; /* Thumb color and track color */
+}
+
+
+/* Time slot styling */
+.fc-timegrid-slot {
+  background-color: #f9fafb; /* Light gray background */
+  border: 1px solid #e5e7eb; /* Border color */
+}
+
+/* Time labels */
+.fc-timegrid-axis {
+  background-color: #f3f4f6; /* Slightly darker gray for axis */
+  font-weight: bold;
+  color: #374151; /* Tailwind gray-700 */
+  font-size: 0.875rem;
+}
+
+/* Event styling */
+.fc-event {
+  background-color: #eab308; /* Tailwind green-500 */
+  color: white !important;
+  border: none;
+  border-radius: 0.375rem; /* Rounded edges */
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Toolbar buttons */
+.fc-button {
+  background-color: #3b82f6 !important; /* Tailwind blue-500 */
+  color: white !important;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: none !important;
+}
+
+.fc-button-active {
+  background-color: #1a252f !important;
+  border-color: #151e27 !important;
+  color: #fff !important;
+}
+
+.fc-button:hover {
+  background-color: #1a252f !important; /* Darker blue on hover */
+}
+
+/* Toolbar title */
+.fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827; /* Tailwind gray-900 */
+}
+
+/* Selected time range */
+.fc-highlight {
+  background-color: #d1fae5 !important; /* Tailwind green-100 for selection */
+}
+  

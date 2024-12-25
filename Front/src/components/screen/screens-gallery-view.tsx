@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Image, Camera, Trash2 } from "lucide-react";
-import FileUploader from "./fileUploader";
+import { Image, Camera, Trash2, CalendarPlus } from "lucide-react";
+import FileUploader from "../file-uploader";
 import { ScreenView } from "@/pages/screens";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/authProvider";
 import { ScreenStatus } from "@/types/screen.enum";
 import ConfirmationModal from "@/components/ui/confirmation-modal"; 
+import ScreenTimeSlotsModal from "./modals/screen-time-slots-modal";
+import "@/styles/calendar.css";
 
 type ScreensGalleryViewProps = {
   screens: ScreenView[];
@@ -23,21 +25,29 @@ const ScreensGalleryView = ({
   onDelete,
   onDeleteImage,
 }: ScreensGalleryViewProps) => {
-  const { isCompany } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedScreenId, setSelectedScreenId] = useState<number | null>(null);
+  const { user, isCompany } = useAuth();
 
-  const handleDelete = (screenId: number) => {
-    setSelectedScreenId(screenId);
-    setIsModalOpen(true);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [screenModalOpen, setScreenModalOpen] = useState(false);
+
+  const [selectedScreen, setSelectedScreen] = useState<ScreenView | null>(null);
+
+  const handleBook = (screen: ScreenView) => {
+    setSelectedScreen(screen);
+    setScreenModalOpen(true);
+  };
+
+  const handleDelete = (screen: ScreenView) => {
+    setSelectedScreen(screen);
+    setDeleteModalOpen(true);
   };
 
   const confirmDelete = () => {
-    if (selectedScreenId !== null) {
-      onDelete(selectedScreenId);
+    if (selectedScreen && selectedScreen.id) {
+      onDelete(selectedScreen.id);
     }
-    setIsModalOpen(false);
-    setSelectedScreenId(null);
+    setDeleteModalOpen(false);
+    setSelectedScreen(null);
   };
 
   return (
@@ -98,7 +108,7 @@ const ScreensGalleryView = ({
             </div>
 
             {/* Action Buttons */}
-            {isCompany && (
+            {isCompany ? (
               <div className="mt-4 flex justify-between items-center">
                 {/* Enable/Disable Toggle */}
                 <Toggle
@@ -117,23 +127,38 @@ const ScreensGalleryView = ({
                 {/* Delete Button */}
                 {screen.status === ScreenStatus.OFF && <Button
                   variant="destructive"
-                  onClick={() => handleDelete(screen.id)}
+                  onClick={() => handleDelete(screen)}
                   className="flex items-center gap-2"
                 >
                   <Trash2 className="w-5 h-5" />
                   Delete
                 </Button>}
               </div>
+            ) : (
+              user && (<Button
+                  onClick={() => handleBook(screen)}
+                  className="flex items-center gap-2"
+              >
+                <CalendarPlus className="w-5 h-5" />
+                Book
+              </Button>)
             )}
           </div>
         ))}
       </div>
 
+      {/* Screen schedule modal */}
+      <ScreenTimeSlotsModal
+        open={screenModalOpen}
+        setOpen={setScreenModalOpen}
+        screen={selectedScreen}
+      />
+
       {/* Delete Confirmation Modal */}
-      {isModalOpen && (
+      {deleteModalOpen && (
         <ConfirmationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
           onConfirm={confirmDelete}
           title="Delete Screen"
           description="Are you sure you want to delete this screen? This action cannot be undone."

@@ -2,11 +2,11 @@ import { APIClient } from "@/services/APIClient";
 import React, { useRef } from "react";
 
 type FileUploaderProps = {
-  ownerId: number; // General identifier for the upload (e.g., campaignId, screenId, etc.)
-  uploadEndpoint: string; // API endpoint to request the upload URL
-  completeEndpoint: string; // API endpoint to notify backend after successful upload
-  onComplete?: (key: string) => void; // Callback after upload completion
-  children: React.ReactNode; // Custom UI elements to trigger the upload
+  ownerId: number;
+  uploadEndpoint: string;
+  completeEndpoint: string;
+  onComplete?: (key: string) => void;
+  children: React.ReactNode;
 };
 
 const FileUploader: React.FC<FileUploaderProps> = ({

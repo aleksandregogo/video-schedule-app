@@ -1,6 +1,6 @@
 import { BadRequestException, HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Equal, Repository } from "typeorm";
+import { Equal, Or, Repository } from "typeorm";
 import { UserInfo } from "src/User/Interface/UserInfoInterface";
 import { Company } from "src/Entities/company.entity";
 import { DeleteFileCommand } from "src/Storage/Command/delete-file.command";
@@ -15,12 +15,15 @@ import { ScreenCreateDto } from "./Dto/screen.create.dto";
 import { Screen } from "src/Entities/screen.entity"
 import { ScreenStatus } from "./Enum/screen.status.enum";
 import { ToggleScreenStatusDto } from "./Dto/toggle.screen.status.dto";
+import { Reservation } from "src/Entities/reservation.entity";
+import { ReservationStatus } from "./Enum/reservation.status.enum";
 
 @Injectable()
 export class ScreenService {
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(Screen) private screenRepository: Repository<Screen>,
+    @InjectRepository(Reservation) private reservationRepository: Repository<Reservation>,
     private commandBus: CommandBus,
 ) {}
 
@@ -51,6 +54,24 @@ export class ScreenService {
       return await this.getScreensWithImageUrls(screens);
     } catch (err) {
       console.error('Error fetching screens or generating URLs:', err);
+      return null;
+    }
+  }
+
+  async getScreenReservations(id: number) {
+    try {
+      const reservations = await this.reservationRepository.find({
+        where: {
+          screen: {
+            id: Equal(id)
+          },
+          status: Or(Equal(ReservationStatus.CONFIRMED), Equal(ReservationStatus.PENDING))
+        }
+      });
+  
+      return reservations;
+    } catch (err) {
+      console.error('Error fetching reservations', err);
       return null;
     }
   }
