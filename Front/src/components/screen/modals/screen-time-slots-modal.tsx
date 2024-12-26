@@ -6,19 +6,20 @@ import { useToast } from "@/hooks/ui/use-toast";
 import { Reservation, ReservationStatus, CalendarEvent } from "../types";
 import { ScreenView } from "@/pages/screens";
 import { APIClient } from "@/services/APIClient";
-import { formatDateTimeLocal, parseDateTimeLocal } from "@/lib/utils";
 import Schedule from "@/components/schedule/schedule";
 import { Button } from "@/components/ui/button";
 import ScreenModalHeader from "./screen-modal-header";
+import { Label } from "@radix-ui/react-label";
 
 type Props = {
   screen: ScreenView;
-  open: boolean;
-  setOpen: (value: boolean) => void;
+  screenReservations: Reservation[];
+  onClose: () => void;
+  reloadReservations: () => void;
 };
 
-const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
-  const [zoomIndex, setZoomIndex] = useState(1);
+const ScreenTimeSlotsModal = ({ screen, screenReservations, onClose, reloadReservations }: Props) => {
+  const [zoomIndex, setZoomIndex] = useState(2);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [reservationModalOpen, setReservationModalOpen] = useState(false);
@@ -27,38 +28,35 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
   const [campaignTitle, setCampaignTitle] = useState<string>("");
   const [campaignId, setCampaignId] = useState<string>();
 
+  const [price, setPrice] = useState<number>(0);
+
   const { toast } = useToast();
 
-  const fetchScreens = async (screenId: number) => {
-    await APIClient.get(`/screen/${screenId}/reservations`)
-      .then((response) => {
-        const reservations = response.data.data as Reservation[];
-
-        if (reservations) {  
-          const data = reservations.map(
-            (reservation: Reservation) =>
-              ({
-                id: reservation.id,
-                title: reservation.title,
-                status: reservation.status,
-                start: formatDateTimeLocal(reservation.start),
-                end: formatDateTimeLocal(reservation.end),
-                backgroundColor: "#f87171",
-                canEdit: false
-              } as Reservation)
-          );
-
-          setReservations(data);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
-  }
+  useEffect(() => {
+    if (screenReservations) setReservations(screenReservations)
+  }, [screenReservations]);
 
   useEffect(() => {
-    if (screen && screen.id) fetchScreens(screen.id)
-  }, [screen]);
+    if (reservations && screen?.price) {
+      const newReservations = reservations.filter((res) => res.canEdit);
+
+      if (newReservations?.length) {
+        let fullCalculatedPrice = 0;
+        
+        newReservations.forEach((reservation) => {
+          const start = new Date(reservation.start);
+          const end = new Date(reservation.end);
+          const calculatedDuration = Math.round((end.getTime() - start.getTime()) / 1000);
+
+          fullCalculatedPrice += calculatedDuration * screen.price;
+        });
+
+        if (fullCalculatedPrice) setPrice(fullCalculatedPrice);
+      } else {
+        setPrice(0)
+      }
+    }
+  }, [reservations, screen])
 
   const handleViewChange = (index: number) => setZoomIndex(index);
 
@@ -154,7 +152,7 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={true} onClose={onClose}>
       <DialogTitle hidden></DialogTitle>
       <DialogContent className="w-full max-w-[90vw] h-[80vh] p-0 rounded-lg shadow-lg bg-white">
         {viewStep < 2 &&
@@ -163,6 +161,8 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
             step={viewStep}
             setStep={setViewStep}
             reservationAdded={reservations.some((s) => s.canEdit)}
+            handleCreate={handleCreateCampaign}
+            disableCreate={campaignTitle === '' || !reservations.some((s) => s.confirmed)}
           />
         }
         {viewStep === 0 ? (
@@ -182,7 +182,6 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
             setReservations={(reservations) => setReservations(reservations)}
             title={campaignTitle}
             setTitle={(title) => setCampaignTitle(title)}
-            handleCreate={handleCreateCampaign}
           />
         ) : (
           <div className="p-6 flex flex-col items-center justify-center space-y-6">
@@ -192,7 +191,7 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
             </p>
             <div className="flex space-x-4">
               <Button onClick={async () => {
-                await fetchScreens(screen.id);
+                reloadReservations();
                 setViewStep(0);
                 setCampaignTitle('');
               }} variant="outline">
@@ -206,6 +205,28 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
             </div>
           </div>
         )}
+        {viewStep < 2 && <div className="flex justify-between items-center p-2">
+          {/* Duration Input */}
+          <div className="flex items-center space-x-4">
+            <Label className="text-sm font-medium">
+              Prices is calculated for <b>1 minute</b> video. Later it will be recalculated by video duration that you'll upload.
+            </Label>
+            {/* <Label className="w-full text-sm font-medium">Media duration (seconds):</Label> */}
+            {/* <Input
+              type="number"
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className="mt-1"
+            /> */}
+          </div>
+
+          {/* Price Display */}
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-700">
+              Calculated Price: <span className="text-lg font-semibold">{price}$</span>
+            </p>
+          </div>
+        </div>}
       </DialogContent>
 
       {/* Reservation Modal */}

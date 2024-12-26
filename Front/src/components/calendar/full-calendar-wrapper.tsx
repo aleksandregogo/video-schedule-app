@@ -17,7 +17,8 @@ const zoomLevels = [
   { label: "Week", name: "timeGridWeek", slotDuration: "01:00:00" },
   { label: "Day", name: "timeGridDay", slotDuration: "00:30:00" },
   { label: "Hour", name: "timeGridDay", slotDuration: "00:15:00" },
-  { label: "Minute", name: "timeGridDay", slotDuration: "00:05:00" },
+  { label: "5 Minute", name: "timeGridDay", slotDuration: "00:05:00" },
+  { label: "1 Minute", name: "timeGridDay", slotDuration: "00:01:00" },
 ];
 
 const FullCalendarWrapper = ({
@@ -62,7 +63,7 @@ const FullCalendarWrapper = ({
   }, [calendarRef.current])
 
   return (
-    <div className="relative h-full w-full p-2">
+    <div className="relative w-full p-2">
       {/* Sticky Header with View Buttons */}
       <div className="flex justify-between items-center bg-gray-100 p-1 shadow-md sticky top-0 z-10">
         <div className="flex space-x-2">
@@ -104,7 +105,7 @@ const FullCalendarWrapper = ({
           plugins={[timeGridPlugin, interactionPlugin]}
           initialView={currentZoom.name}
           key={currentZoom.name + currentZoom.slotDuration}
-          headerToolbar={false} // Disable FullCalendar's default header
+          headerToolbar={false}
           events={reservations.map((slot) => ({
             id: slot.id,
             start: slot.start,
@@ -114,8 +115,6 @@ const FullCalendarWrapper = ({
           allDaySlot={false}
           slotDuration={currentZoom.slotDuration}
           slotLabelInterval={currentZoom.slotDuration}
-          slotMinTime="00:00:00"
-          slotMaxTime="24:00:00"
           selectable
           select={(info) =>
             onSlotSelect({
@@ -131,7 +130,6 @@ const FullCalendarWrapper = ({
           }}
           height="100%"
           contentHeight="auto"
-          scrollTime="09:00:00"
         />
       </div>
     </div>

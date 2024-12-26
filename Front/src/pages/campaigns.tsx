@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import MediaUploadModal from "@/components/campaign/modals/media-upload-modal";
-import EditReservationsModal from "@/components/campaign/modals/edit-reservations-modal";
 import { useToast } from "@/hooks/ui/use-toast";
 import { APIClient } from "@/services/APIClient";
 import { useParams } from "react-router-dom";
 import { ScreenView } from "./screens";
 import { Reservation } from "@/components/screen/types";
+import { Edit2, Trash2 } from "lucide-react";
+import ScreenTimeSlotsModal from "@/components/screen/modals/screen-time-slots-modal";
+import { formatDateTimeLocal } from "@/lib/utils";
 
 export enum CampaignStatus {
   CONFIRMED = 'CONFIRMED',
@@ -29,15 +31,15 @@ const Campaigns = () => {
   const { id } = useParams();
 
   const [campaigns, setCampaigns] = useState<CampaignView[]>([]);
-  const [selectedCampaign, setSelectedCampaign] = useState<CampaignView | null>(
-    null
-  );
+  const [selectedCampaign, setSelectedCampaign] = useState<CampaignView | null>(null);
+  const [selectedCampaignReservations, setSelectedCampaignReservations] = useState<Reservation[]>([]);
+
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
   const { toast } = useToast();
 
-  const fetchScreens = () => {
+  const fetchCampaigns = () => {
     APIClient.get('/campaign/all')
       .then((response) => {
         const campaigns = response.data.data as CampaignView[];
@@ -75,7 +77,7 @@ const Campaigns = () => {
   };
 
   useEffect(() => {
-    fetchScreens();
+    fetchCampaigns();
   }, []);
 
 
@@ -91,6 +93,71 @@ const Campaigns = () => {
     });
   };
 
+  const handleCampaignEdit = async (campaign: CampaignView) => {
+    await reloadReservations(campaign);
+    setSelectedCampaign(campaign);
+    setEditModalOpen(true);
+  }
+
+  const reloadReservations = async (campaign: CampaignView) => {
+    await fetchScreenReservations(campaign.screen.id)
+    await fetchCampaignReservations(campaign.id);
+  }
+
+  const fetchScreenReservations = async (screenId: number) => {
+    await APIClient.get(`/screen/${screenId}/reservations`)
+      .then((response) => {
+        const reservations = response.data.data as Reservation[];
+
+        if (reservations) {  
+          const data = reservations.map(
+            (reservation: Reservation) =>
+              ({
+                id: reservation.id,
+                title: reservation.title,
+                status: reservation.status,
+                start: formatDateTimeLocal(reservation.start),
+                end: formatDateTimeLocal(reservation.end),
+                backgroundColor: "#f87171",
+                canEdit: false
+              } as Reservation)
+          );
+
+          // setSelectedScreenReservations(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching screens:", err);
+      });
+  }
+
+  const fetchCampaignReservations = async (screenId: number) => {
+    await APIClient.get(`/campaign/${screenId}/reservations`)
+      .then((response) => {
+        const reservations = response.data.data as Reservation[];
+
+        if (reservations) {  
+          const data = reservations.map(
+            (reservation: Reservation) =>
+              ({
+                id: reservation.id,
+                title: reservation.title,
+                status: reservation.status,
+                start: formatDateTimeLocal(reservation.start),
+                end: formatDateTimeLocal(reservation.end),
+                backgroundColor: "#f87171",
+                canEdit: false
+              } as Reservation)
+          );
+
+          // setSelectedScreenReservations(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching screens:", err);
+      });
+  }
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Campaigns</h1>
@@ -102,33 +169,33 @@ const Campaigns = () => {
           >
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">{campaign.name}</h2>
-              <p className="text-sm text-gray-600">
-                Status: {campaign.status}
-              </p>
+              <Button
+                  variant="destructive"
+                  onClick={() => handleDelete(campaign.id)}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
             </div>
+            <p className="text-sm text-gray-600">
+              Status: {campaign.status}
+            </p>
             <p className="text-sm text-gray-600">
               Screen: {campaign.screen.name}
             </p>
             <p className="text-sm text-gray-600">
               Reservations: {campaign.reservations?.length || 0}
             </p>
+            <p className="text-sm text-gray-600">
+              Price: {campaign.reservations?.length || 0}
+            </p>
             <div className="flex justify-between items-center mt-4">
               {/* Left-aligned buttons */}
               <div className="flex space-x-4">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setSelectedCampaign(campaign);
-                    setEditModalOpen(true);
-                  }}
+                  onClick={() => handleCampaignEdit(campaign)}
                 >
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDelete(campaign.id)}
-                >
-                  Delete
+                  <Edit2/>
                 </Button>
                 <Button
                   variant="outline"
@@ -162,13 +229,12 @@ const Campaigns = () => {
       )}
 
       {/* Edit Reservations Modal */}
-      {editModalOpen && selectedCampaign && (
-        <EditReservationsModal
-          reservations={selectedCampaign.reservations}
-          onClose={() => setEditModalOpen(false)}
-          onSave={() => {}}
-        />
-      )}
+      {editModalOpen && <ScreenTimeSlotsModal
+        screen={selectedCampaign?.screen}
+        screenReservations={selectedCampaignReservations}
+        onClose={() => setEditModalOpen(false)}
+        reloadReservations={() => reloadReservations(selectedCampaign)}
+      />}
     </div>
   );
 };

@@ -9,6 +9,9 @@ import { ScreenStatus } from "@/types/screen.enum";
 import ConfirmationModal from "@/components/ui/confirmation-modal"; 
 import ScreenTimeSlotsModal from "./modals/screen-time-slots-modal";
 import "@/styles/calendar.css";
+import { Reservation } from "./types";
+import { APIClient } from "@/services/APIClient";
+import { formatDateTimeLocal } from "@/lib/utils";
 
 type ScreensGalleryViewProps = {
   screens: ScreenView[];
@@ -31,8 +34,10 @@ const ScreensGalleryView = ({
   const [screenModalOpen, setScreenModalOpen] = useState(false);
 
   const [selectedScreen, setSelectedScreen] = useState<ScreenView | null>(null);
+  const [selectedScreenReservations, setSelectedScreenReservations] = useState<Reservation[]>([]);
 
-  const handleBook = (screen: ScreenView) => {
+  const handleBook = async (screen: ScreenView) => {
+    await fetchReservations(screen.id);
     setSelectedScreen(screen);
     setScreenModalOpen(true);
   };
@@ -49,6 +54,33 @@ const ScreensGalleryView = ({
     setDeleteModalOpen(false);
     setSelectedScreen(null);
   };
+
+  const fetchReservations = async (screenId: number) => {
+    await APIClient.get(`/screen/${screenId}/reservations`)
+      .then((response) => {
+        const reservations = response.data.data as Reservation[];
+
+        if (reservations) {  
+          const data = reservations.map(
+            (reservation: Reservation) =>
+              ({
+                id: reservation.id,
+                title: reservation.title,
+                status: reservation.status,
+                start: formatDateTimeLocal(reservation.start),
+                end: formatDateTimeLocal(reservation.end),
+                backgroundColor: "#f87171",
+                canEdit: false
+              } as Reservation)
+          );
+
+          setSelectedScreenReservations(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching screens:", err);
+      });
+  }
 
   return (
     <>
@@ -135,24 +167,25 @@ const ScreensGalleryView = ({
                 </Button>}
               </div>
             ) : (
-              user && (<Button
-                  onClick={() => handleBook(screen)}
-                  className="flex items-center gap-2"
+              user && <Button
+                onClick={() => handleBook(screen)}
+                className="flex items-center gap-2"
               >
                 <CalendarPlus className="w-5 h-5" />
                 Book
-              </Button>)
+              </Button>
             )}
           </div>
         ))}
       </div>
 
       {/* Screen schedule modal */}
-      <ScreenTimeSlotsModal
-        open={screenModalOpen}
-        setOpen={setScreenModalOpen}
+      {screenModalOpen && <ScreenTimeSlotsModal
         screen={selectedScreen}
-      />
+        screenReservations={selectedScreenReservations}
+        onClose={() => setScreenModalOpen(false)}
+        reloadReservations={() => fetchReservations(selectedScreen.id)}
+      />}
 
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
