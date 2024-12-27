@@ -18,6 +18,7 @@ import { FileUploadRequestDto } from "src/Storage/Dto/file.upload.request.dto";
 import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto";
 import { Reservation } from "src/Entities/reservation.entity";
 import { ReservationStatus } from "src/Reservations/Enum/reservation.status.enum";
+import { EditCampaignDto } from "./Dto/edit.campaign.dto copy";
 
 @Injectable()
 export class CampaignService {
@@ -75,6 +76,85 @@ export class CampaignService {
     return savedCampaign;
   }
 
+  async editCampaign(user: User, campaignId: number, editCampaignDto: EditCampaignDto) {    
+    const { name, reservations } = editCampaignDto;
+
+    const campaign = await this.findCampaignById(campaignId, user.id);
+
+    if (!campaign) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    }
+
+    campaign.name = name;
+
+    const updatedCampaign = await this.campaignRepository.save(campaign);
+
+    if (!updatedCampaign) {
+      throw new HttpException(`Something went wrong while updating campaign`, HttpStatus.BAD_REQUEST);
+    }
+
+    const existingReservations = await this.findReservationsByCampaignId(updatedCampaign.id);
+
+    const reservationsToSave: Reservation[] = [];
+
+    for (const newRes of reservations) {
+      if (newRes.id) {
+        const existingRes = existingReservations.find((res) => res.id === newRes.id);
+
+        if (existingRes) {
+          existingRes.name = newRes.name;
+          existingRes.startTime = newRes.startTime;
+          existingRes.endTime = newRes.endTime;
+  
+          reservationsToSave.push(existingRes);
+
+          continue;
+        }
+      }
+
+      const reservationToAdd = new Reservation();
+      reservationToAdd.name = newRes.name;
+      reservationToAdd.startTime = newRes.startTime;
+      reservationToAdd.endTime = newRes.endTime;
+      reservationToAdd.status = ReservationStatus.PENDING;
+      reservationToAdd.campaign = { id: updatedCampaign.id } as Campaign;
+      reservationToAdd.screen = { id: updatedCampaign.screenId } as Screen;
+
+      reservationsToSave.push(reservationToAdd);
+    }
+
+    const updatedReservations = await this.reservationRepository.save(reservationsToSave);
+
+    if (!updatedReservations) {
+      throw new HttpException(`Something went wrong while saving reservations`, HttpStatus.BAD_REQUEST);
+    }
+
+    return updatedCampaign;
+  }
+
+  async deleteCampaign(userLocalId: number, campaignId: number) {
+    const campaign = await this.findCampaignById(campaignId, userLocalId);
+
+    if (!campaign) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    }
+
+    const deletedCampaign = await this.campaignRepository.delete({
+      id: Equal(campaignId),
+      user: {
+        id: Equal(userLocalId)
+      }
+    })
+      .catch((err) => {
+        console.log(err);
+        return null;
+      });
+
+    if (!deletedCampaign) {
+      throw new BadRequestException('Something went wrong while updating DB');
+    }
+  }
+
   async getAllCampaigns(user: User): Promise<Campaign[]> {
     return await this.campaignRepository.find({
       where: {
@@ -90,10 +170,42 @@ export class CampaignService {
     })
   }
 
-  async getCampaignReservations(user: User, campaignId: number): Promise<Reservation[]> {
+  async getCampaignReservations(campaignId: number, userId: number): Promise<Reservation[]> {
+    const campaign = await this.findCampaignById(campaignId, userId);
 
-    
-    return []
+    if (!campaign) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    }
+
+    return await this.findReservationsByCampaignId(campaign.id);
+  }
+
+  async findReservationsByCampaignId(campaignId: number): Promise<Reservation[]> {
+    return await this.reservationRepository.find({
+      where: {
+        campaign: { id: Equal(campaignId) },
+      }
+    })
+    .catch((err) => {
+      console.error("Error in getAllCampaigns", err);
+      return [];
+    })
+  }
+
+  async findCampaignById(id: number, userId: number): Promise<Campaign> {
+    return await this.campaignRepository.findOne({
+      where: {
+        id: Equal(id),
+        user: { id: Equal(userId) }
+      },
+      relations: {
+        company: true
+      }
+    })
+      .catch((err) => {
+        console.error(err);
+        return null;
+      });
   }
 
   async generateUploadUrl(user: UserInfo, fileUploadRequestDto: FileUploadRequestDto) {
@@ -107,18 +219,7 @@ export class CampaignService {
       throw new HttpException("File size exceeds limit", HttpStatus.BAD_REQUEST);
     }
 
-    const campaign = await this.campaignRepository.findOne({
-      where: {
-        id: Equal(ownerId),
-      },
-      relations: {
-        company: true
-      }
-    })
-      .catch((err) => {
-        console.error(err);
-        return null;
-      });
+    const campaign = await this.findCampaignById(ownerId, user.userLocalId);
 
     if (!campaign) {
       throw new HttpException(`Campaign with id: ${ownerId} doesn't exists`, HttpStatus.BAD_REQUEST);

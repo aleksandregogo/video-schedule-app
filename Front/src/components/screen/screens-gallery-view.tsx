@@ -32,6 +32,7 @@ const ScreensGalleryView = ({
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [screenModalOpen, setScreenModalOpen] = useState(false);
+  const [screenModalStep, setScreenModalStep] = useState(0);
 
   const [selectedScreen, setSelectedScreen] = useState<ScreenView | null>(null);
   const [selectedScreenReservations, setSelectedScreenReservations] = useState<Reservation[]>([]);
@@ -81,6 +82,42 @@ const ScreensGalleryView = ({
         console.error("Error fetching screens:", err);
       });
   }
+
+  const handleCreateCampaign = (reservations: Reservation[], name: string) => {
+    const reservedTimes = [];
+
+    reservations.forEach((reservation) => {
+      if (reservation.canEdit) {
+        reservedTimes.push({
+          name: reservation.title,
+          startTime: new Date(reservation.start),
+          endTime: new Date(reservation.end),
+        });
+      }
+    })
+
+    if (!reservedTimes.length) {
+      console.error("Reserved times is empty");
+      return;
+    }
+
+    APIClient.post(`/campaign`, {
+      name,
+      screenId: selectedScreen.id,
+      reservations: reservedTimes
+    })
+      .then((response) => {
+        const data = response.data;
+        if (data && data.id) {
+          setScreenModalStep(2);
+        } else {
+          console.error("Error creating campaign", response?.data);
+        }
+      })
+      .catch((err) => {
+        console.error("Error creating campaign:", err);
+      });
+  };
 
   return (
     <>
@@ -181,16 +218,19 @@ const ScreensGalleryView = ({
 
       {/* Screen schedule modal */}
       {screenModalOpen && <ScreenTimeSlotsModal
-        screen={selectedScreen}
-        screenReservations={selectedScreenReservations}
+        title={selectedScreen?.name}
+        price={selectedScreen?.price}
+        reservedSlots={selectedScreenReservations}
+        step={screenModalStep}
+        onStepChange={setScreenModalStep}
         onClose={() => setScreenModalOpen(false)}
-        reloadReservations={() => fetchReservations(selectedScreen.id)}
+        onReloadReservations={() => fetchReservations(selectedScreen.id)}
+        onReservationsSubmit={handleCreateCampaign}
       />}
 
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
         <ConfirmationModal
-          isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onConfirm={confirmDelete}
           title="Delete Screen"

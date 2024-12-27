@@ -9,6 +9,7 @@ import { Reservation } from "@/components/screen/types";
 import { Edit2, Trash2 } from "lucide-react";
 import ScreenTimeSlotsModal from "@/components/screen/modals/screen-time-slots-modal";
 import { formatDateTimeLocal } from "@/lib/utils";
+import ConfirmationModal from "@/components/ui/confirmation-modal";
 
 export enum CampaignStatus {
   CONFIRMED = 'CONFIRMED',
@@ -17,6 +18,7 @@ export enum CampaignStatus {
   CANCELLED = 'CANCELLED'
 }
 
+export type ReservationOwner = 'screen' | 'campaign';
 export interface CampaignView {
   id: number;
   createdAt: Date;
@@ -32,10 +34,13 @@ const Campaigns = () => {
 
   const [campaigns, setCampaigns] = useState<CampaignView[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignView | null>(null);
-  const [selectedCampaignReservations, setSelectedCampaignReservations] = useState<Reservation[]>([]);
+  const [selectedReservations, setSelectedReservations] = useState<Reservation[]>([]);
 
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editModalStep, setEditModalStep] = useState(0);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -85,78 +90,127 @@ const Campaigns = () => {
 
   }
 
-  const handleDelete = (campaignId: number) => {
-    toast({
-      title: "Campaign Deleted",
-      description: `Campaign #${campaignId} has been successfully deleted.`,
-      variant: "success",
-    });
-  };
-
-  const handleCampaignEdit = async (campaign: CampaignView) => {
-    await reloadReservations(campaign);
+  const handleClickEdit = async (campaign: CampaignView) => {
+    await loadReservations(campaign);
     setSelectedCampaign(campaign);
     setEditModalOpen(true);
   }
 
-  const reloadReservations = async (campaign: CampaignView) => {
-    await fetchScreenReservations(campaign.screen.id)
-    await fetchCampaignReservations(campaign.id);
+  const handleClickDelete = async (campaign: CampaignView) => {
+    setSelectedCampaign(campaign);
+    setDeleteModalOpen(true);
   }
 
-  const fetchScreenReservations = async (screenId: number) => {
-    await APIClient.get(`/screen/${screenId}/reservations`)
+  const loadReservations = async (campaign: CampaignView) => {
+    const screenReservations = await fetchReservations(campaign.screen.id, 'screen');
+    const campaignReservations = await fetchReservations(campaign.id, 'campaign');
+
+    const selectedReservations = screenReservations.map(
+      (screenRes: Reservation) => {
+        const isCampaignOwned = !!campaignReservations.find((res) => res.id === screenRes.id);
+
+        return {
+          id: screenRes.id,
+          title: screenRes.title,
+          status: screenRes.status,
+          start: formatDateTimeLocal(screenRes.start),
+          end: formatDateTimeLocal(screenRes.end),
+          backgroundColor: isCampaignOwned ? "#eab308" : '#f87171',
+          canEdit: isCampaignOwned
+        } as Reservation
+      }
+    );
+
+    setSelectedReservations(selectedReservations);
+  }
+
+  const fetchReservations = async (id: number, owner: ReservationOwner): Promise<Reservation[]> => {
+    return await APIClient.get(`/${owner}/${id}/reservations`)
       .then((response) => {
         const reservations = response.data.data as Reservation[];
+  
+        if (reservations?.length) return reservations;
+  
+        return [];
+      })
+      .catch((err) => {
+        console.error("Error fetching screen reservations:", err);
+        return [];
+      });
+    
+  }
 
-        if (reservations) {  
-          const data = reservations.map(
-            (reservation: Reservation) =>
-              ({
-                id: reservation.id,
-                title: reservation.title,
-                status: reservation.status,
-                start: formatDateTimeLocal(reservation.start),
-                end: formatDateTimeLocal(reservation.end),
-                backgroundColor: "#f87171",
-                canEdit: false
-              } as Reservation)
-          );
+  const handleEdit = async (reservations: Reservation[], name: string) => {
+    const reservedTimes = [];
 
-          // setSelectedScreenReservations(data);
+    reservations.forEach((reservation) => {
+      if (reservation.canEdit) {
+        reservedTimes.push({
+          id: reservation.id || null,
+          name: reservation.title,
+          startTime: new Date(reservation.start),
+          endTime: new Date(reservation.end),
+        });
+      }
+    })
+
+    if (!reservedTimes.length) {
+      console.error("Reserved times is empty");
+      return;
+    }
+
+    APIClient.put(`/campaign/${selectedCampaign.id}`, {
+      name,
+      reservations: reservedTimes
+    })
+      .then((response) => {
+        const data = response.data;
+        if (data && data.id) {
+          setSelectedCampaign(null);
+          setEditModalOpen(false);
+          fetchCampaigns();
+          toast({
+            title: "Campaign Updated",
+            description: `Campaign #${selectedCampaign.name} has been successfully updated.`,
+            variant: "success",
+          });
+        } else {
+          console.error("Error creating campaign", response?.data);
         }
       })
       .catch((err) => {
-        console.error("Error fetching screens:", err);
+        console.error("Error creating campaign:", err);
       });
   }
 
-  const fetchCampaignReservations = async (screenId: number) => {
-    await APIClient.get(`/campaign/${screenId}/reservations`)
-      .then((response) => {
-        const reservations = response.data.data as Reservation[];
+  const handleDelete = () => {
+    if (!selectedCampaign) {
+      console.error("Campaign is empty");
+      return;
+    }
 
-        if (reservations) {  
-          const data = reservations.map(
-            (reservation: Reservation) =>
-              ({
-                id: reservation.id,
-                title: reservation.title,
-                status: reservation.status,
-                start: formatDateTimeLocal(reservation.start),
-                end: formatDateTimeLocal(reservation.end),
-                backgroundColor: "#f87171",
-                canEdit: false
-              } as Reservation)
-          );
-
-          // setSelectedScreenReservations(data);
-        }
+    APIClient.delete(`/campaign/${selectedCampaign.id}`)
+      .then(() => {
+        setSelectedCampaign(null);
+        setDeleteModalOpen(false);
+        fetchCampaigns();
+        toast({
+          title: "Campaign Deleted",
+          description: `Campaign #${selectedCampaign.name} has been successfully updated.`,
+          variant: "success",
+        });
       })
       .catch((err) => {
-        console.error("Error fetching screens:", err);
+        console.error("Error creating campaign:", err);
+        setSelectedCampaign(null);
+        setDeleteModalOpen(false);
+        toast({
+          title: "Campaign Deleted",
+          description: `Something went wront while deleting campaign #${selectedCampaign.name}.`,
+          variant: "destructive",
+        });
       });
-  }
+  };
 
   return (
     <div className="p-6">
@@ -171,7 +225,7 @@ const Campaigns = () => {
               <h2 className="text-lg font-semibold">{campaign.name}</h2>
               <Button
                   variant="destructive"
-                  onClick={() => handleDelete(campaign.id)}
+                  onClick={() => handleClickDelete(campaign)}
                 >
                   <Trash2 className="w-5 h-5" />
                 </Button>
@@ -193,7 +247,7 @@ const Campaigns = () => {
               <div className="flex space-x-4">
                 <Button
                   variant="outline"
-                  onClick={() => handleCampaignEdit(campaign)}
+                  onClick={() => handleClickEdit(campaign)}
                 >
                   <Edit2/>
                 </Button>
@@ -230,11 +284,25 @@ const Campaigns = () => {
 
       {/* Edit Reservations Modal */}
       {editModalOpen && <ScreenTimeSlotsModal
-        screen={selectedCampaign?.screen}
-        screenReservations={selectedCampaignReservations}
+        isEditMode={true}
+        title={selectedCampaign?.name || ''}
+        price={selectedCampaign?.screen?.price || 0}
+        reservedSlots={selectedReservations}
+        step={editModalStep}
+        onStepChange={(step) => setEditModalStep(step)}
         onClose={() => setEditModalOpen(false)}
-        reloadReservations={() => reloadReservations(selectedCampaign)}
+        onReloadReservations={() => loadReservations(selectedCampaign)}
+        onReservationsSubmit={handleEdit}
       />}
+
+      {deleteModalOpen && (
+        <ConfirmationModal
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={handleDelete}
+          title={`Deleting campaign: ${selectedCampaign.name}`}
+          description="Are you sure you want to delete this campaign? This action cannot be undone."
+        />
+      )}
     </div>
   );
 };

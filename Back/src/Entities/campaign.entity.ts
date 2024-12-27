@@ -1,10 +1,11 @@
-import { Entity, Column, JoinColumn, ManyToOne, RelationId } from 'typeorm';
+import { Entity, Column, JoinColumn, ManyToOne, RelationId, OneToMany } from 'typeorm';
 import { Defentity } from './defentity.entity';
 import { Screen } from './screen.entity';
 import { Company } from './company.entity';
 import { User } from './user.entity';
 import { Media } from './media.entity';
 import { CampaignStatus } from 'src/Campaign/Enum/campaign.status.enum';
+import { Reservation } from './reservation.entity';
 
 @Entity('campaign')
 export class Campaign extends Defentity  {
@@ -44,4 +45,7 @@ export class Campaign extends Defentity  {
 
   @Column({ type: 'varchar', length: 20, default: CampaignStatus.PENDING })
   status: CampaignStatus;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.campaign, { cascade: true })
+  reservations: Reservation[];
 }

@@ -5,6 +5,7 @@ type Props = {
   step: number;
   reservationAdded: boolean;
   disableCreate: boolean;
+  isEditMode: boolean;
   setStep: (step: number) => void;
   handleCreate: () => void;
 }
@@ -14,6 +15,7 @@ const ScreenModalHeader = ({
   step,
   reservationAdded,
   disableCreate,
+  isEditMode,
   setStep,
   handleCreate,
 }: Props) => {
@@ -42,7 +44,7 @@ const ScreenModalHeader = ({
               disabled={disableCreate}
               className="bg-blue-500 text-white hover:bg-blue-600"
             >
-              Create
+              {isEditMode ? "Submit" : "Create"}
             </Button>
           </>
         )}

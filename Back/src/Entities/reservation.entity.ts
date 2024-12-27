@@ -25,7 +25,7 @@ export class Reservation extends Defentity  {
   @RelationId((reservation: Reservation) => reservation.screen)
   screenId: number;
 
-  @ManyToOne(() => Campaign, (campaign) => campaign.id)
+  @ManyToOne(() => Campaign, (campaign) => campaign.id, { onDelete: 'CASCADE' })
   @JoinColumn()
   campaign: Campaign;
 

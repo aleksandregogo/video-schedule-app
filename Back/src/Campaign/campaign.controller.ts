@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpException, HttpStatus, UseGuards, Req, Get, Param, ParseIntPipe } from "@nestjs/common";
+import { Controller, Post, Body, HttpException, HttpStatus, UseGuards, Req, Get, Param, ParseIntPipe, Put, Delete, HttpCode } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { Request } from 'express';
 import { CreateCampaignDto } from "./Dto/create.campaign.dto";
@@ -10,6 +10,7 @@ import { FileUploadRequestDto } from "src/Storage/Dto/file.upload.request.dto";
 import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto";
 import { CampaignService } from "./campaign.service";
 import { ReservationPresentation } from "src/Reservations/Presentation/reservation.presentation";
+import { EditCampaignDto } from "./Dto/edit.campaign.dto copy";
 
 @Controller("campaign")
 @UseGuards(AuthGuard('cookie'))
@@ -17,6 +18,7 @@ import { ReservationPresentation } from "src/Reservations/Presentation/reservati
 export class CampaignController {
   constructor(private readonly campaignService: CampaignService) {}
 
+  @ApiOperation({summary: 'Create campaign'})
   @Post()
   async createCampaign(
     @Req() req: Request,
@@ -28,6 +30,35 @@ export class CampaignController {
 
     return new CampaignPresentation().present(campaign);
   }
+
+  @ApiOperation({summary: 'Update campaign'})
+  @Put(':id')
+  async editCampaign(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() editCampaignDto: EditCampaignDto
+  ) {
+    const user = req.user as UserInfo;
+
+    const campaign = await this.campaignService.editCampaign(user.user, id, editCampaignDto);
+
+    return new CampaignPresentation().present(campaign);
+  }
+
+    @ApiOperation({summary: 'Delete campaign'})
+    @UseGuards(AuthGuard('cookie'))
+    @Delete(':id')
+    @HttpCode(204)
+    async deleteCampaign(
+      @Req() req,
+      @Param('id', ParseIntPipe) screenId: number
+    ) {
+      const userInfo = req.user as UserInfo;
+  
+      await this.campaignService.deleteCampaign(userInfo.userLocalId, screenId);
+  
+      return new SuccessResponseObjectDto({})
+    }
 
   @ApiOperation({summary: 'Get all campaigns'})
   @Get('all')
@@ -51,7 +82,7 @@ export class CampaignController {
   async getCampaignReservations(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
     const userInfo = req.user as UserInfo;
 
-    const reservations = await this.campaignService.getCampaignReservations(userInfo.user, id);
+    const reservations = await this.campaignService.getCampaignReservations(id, userInfo.userLocalId);
 
     if (!reservations) throw new HttpException({
       message: `Error on selecting reservations for campaign with id: ${id}`,

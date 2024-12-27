@@ -9,7 +9,7 @@ const Layout: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col h-screen">
       {/* Header for unauthenticated users */}
       {!user && <Header />}
 
