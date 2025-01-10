@@ -178,6 +178,7 @@ const Campaigns = () => {
     await updateCampaignReservations(reservations, name)
       .then(() => {
         setSelectedCampaign(null);
+        setEditModalStep(0);
         setEditModalOpen(false);
         fetchCampaigns();
         toast({

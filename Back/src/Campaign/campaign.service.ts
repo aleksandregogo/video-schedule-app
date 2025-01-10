@@ -97,6 +97,11 @@ export class CampaignService {
     const existingReservations = await this.findReservationsByCampaignId(updatedCampaign.id);
 
     const reservationsToSave: Reservation[] = [];
+    const reservationIdsToDelete: number[] = existingReservations.map((oldRes) => {
+      if (!reservations.find((newRes) => newRes.id === oldRes.id)) {
+        return oldRes.id;
+      }
+    });
 
     for (const newRes of reservations) {
       if (newRes.id) {
@@ -128,6 +133,12 @@ export class CampaignService {
 
     if (!updatedReservations) {
       throw new HttpException(`Something went wrong while saving reservations`, HttpStatus.BAD_REQUEST);
+    }
+
+    const deletedReservations = await this.reservationRepository.delete(reservationIdsToDelete);
+
+    if (!deletedReservations) {
+      throw new HttpException(`Something went wrong while updating reservations`, HttpStatus.BAD_REQUEST);
     }
 
     return updatedCampaign;
