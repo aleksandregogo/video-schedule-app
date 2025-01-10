@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import MediaUploadModal from "@/components/campaign/modals/media-upload-modal";
 import { useToast } from "@/hooks/ui/use-toast";
 import { APIClient } from "@/services/APIClient";
 import { useParams } from "react-router-dom";
 import { ScreenView } from "./screens";
-import { Reservation } from "@/components/screen/types";
-import { Edit2, Trash2 } from "lucide-react";
+import { Reservation, ReservationDto } from "@/components/screen/types";
 import ScreenTimeSlotsModal from "@/components/screen/modals/screen-time-slots-modal";
 import { formatDateTimeLocal } from "@/lib/utils";
 import ConfirmationModal from "@/components/ui/confirmation-modal";
+import Campaign from "@/components/campaign/campaign";
+import CampaignSubmitModal from "@/components/campaign/modals/campaign-submit-modal";
 
 export enum CampaignStatus {
   CONFIRMED = 'CONFIRMED',
@@ -27,20 +26,21 @@ export interface CampaignView {
   screen: ScreenView;
   status: CampaignStatus;
   reservations?: Reservation[];
+  mediaUrl?: string;
 }
 
 const Campaigns = () => {
-  const { id } = useParams();
-
   const [campaigns, setCampaigns] = useState<CampaignView[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignView | null>(null);
   const [selectedReservations, setSelectedReservations] = useState<Reservation[]>([]);
 
-  const [mediaModalOpen, setMediaModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editModalStep, setEditModalStep] = useState(0);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  const [submitModalStep, setSubmitModalStep] = useState(0);
 
   const { toast } = useToast();
 
@@ -86,8 +86,19 @@ const Campaigns = () => {
   }, []);
 
 
-  const onSubmit = (campaignId: number) => {
+  const handleClickReview = async (campaign: CampaignView) => {
+    campaign.reservations = (await fetchReservations(campaign.id, 'campaign')).map((res) => {
+      return {
+        ...res,
+        canEdit: true,
+        confirmed: true
+      }
+    });
 
+    campaign.mediaUrl = await fetchCampaignMedia(campaign.id);
+
+    setSelectedCampaign(campaign);
+    setSubmitModalOpen(true);
   }
 
   const handleClickEdit = async (campaign: CampaignView) => {
@@ -137,11 +148,48 @@ const Campaigns = () => {
         console.error("Error fetching screen reservations:", err);
         return [];
       });
-    
+  }
+
+  const fetchCampaignMedia = async (id: number): Promise<string | null> => {
+    return await APIClient.get(`/campaign/${id}/media/download-request`)
+      .then((response) => response.data.downloadUrl || null)
+      .catch((err) => {
+        console.error("Error fetching campaign media:", err);
+        return null;
+      });
+  }
+
+  const handleDeleteCampaignMedia = async (): Promise<string | null> => {
+    if (!selectedCampaign.id) return;
+    return await APIClient.delete(`/campaign/media/${selectedCampaign.id}`)
+      .then(() => {
+        setSelectedCampaign({
+          ...selectedCampaign,
+          mediaUrl: null
+        });
+      })
+      .catch((err) => {
+        console.error("Error deleting campaign media:", err);
+        return null;
+      });
   }
 
   const handleEdit = async (reservations: Reservation[], name: string) => {
-    const reservedTimes = [];
+    await updateCampaignReservations(reservations, name)
+      .then(() => {
+        setSelectedCampaign(null);
+        setEditModalOpen(false);
+        fetchCampaigns();
+        toast({
+          title: "Campaign Updated",
+          description: `Campaign #${selectedCampaign.name} has been successfully updated.`,
+          variant: "success",
+        });
+      })
+  }
+
+  const updateCampaignReservations = async (reservations: Reservation[], name: string) => {
+    const reservedTimes: ReservationDto[] = [];
 
     reservations.forEach((reservation) => {
       if (reservation.canEdit) {
@@ -159,27 +207,22 @@ const Campaigns = () => {
       return;
     }
 
-    APIClient.put(`/campaign/${selectedCampaign.id}`, {
+    return await APIClient.put(`/campaign/${selectedCampaign.id}`, {
       name,
       reservations: reservedTimes
     })
       .then((response) => {
         const data = response.data;
         if (data && data.id) {
-          setSelectedCampaign(null);
-          setEditModalOpen(false);
-          fetchCampaigns();
-          toast({
-            title: "Campaign Updated",
-            description: `Campaign #${selectedCampaign.name} has been successfully updated.`,
-            variant: "success",
-          });
+          return true;
         } else {
           console.error("Error creating campaign", response?.data);
+          return null;
         }
       })
       .catch((err) => {
         console.error("Error creating campaign:", err);
+        return null;
       });
   }
 
@@ -212,73 +255,54 @@ const Campaigns = () => {
       });
   };
 
+  const handleClickSubmit = async (reservations: Reservation[], name: string) => {
+    await updateCampaignReservations(reservations, name)
+      .then(() => {
+        setSelectedCampaign(null);
+        setSubmitModalOpen(false);
+        setSubmitModalStep(0);
+        fetchCampaigns();
+        toast({
+          title: "Campaign review requested",
+          description: `Review requested for Campaign #${selectedCampaign.name}. Wait for moderator to approve. you'll be notified`,
+          variant: "success",
+        });
+      })
+  }
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Campaigns</h1>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-3 gap-6">
         {campaigns.map((campaign) => (
-          <div
-            key={campaign.id}
-            className="border rounded-lg shadow p-4 bg-gray-50"
-          >
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">{campaign.name}</h2>
-              <Button
-                  variant="destructive"
-                  onClick={() => handleClickDelete(campaign)}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
-            </div>
-            <p className="text-sm text-gray-600">
-              Status: {campaign.status}
-            </p>
-            <p className="text-sm text-gray-600">
-              Screen: {campaign.screen.name}
-            </p>
-            <p className="text-sm text-gray-600">
-              Reservations: {campaign.reservations?.length || 0}
-            </p>
-            <p className="text-sm text-gray-600">
-              Price: {campaign.reservations?.length || 0}
-            </p>
-            <div className="flex justify-between items-center mt-4">
-              {/* Left-aligned buttons */}
-              <div className="flex space-x-4">
-                <Button
-                  variant="outline"
-                  onClick={() => handleClickEdit(campaign)}
-                >
-                  <Edit2/>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedCampaign(campaign);
-                    setMediaModalOpen(true);
-                  }}
-                >
-                  Upload Media
-                </Button>
-              </div>
-
-              {/* Right-aligned button */}
-              <Button
-                onClick={() => onSubmit(campaign.id)}
-              >
-                Review
-              </Button>
-            </div>
-          </div>
+          <Campaign
+            key={campaign.uuid}
+            campaign={campaign}
+            onSubmit={handleClickReview}
+            onEdit={handleClickEdit}
+            onDelete={handleClickDelete}
+          />
         ))}
       </div>
 
       {/* Media Upload Modal */}
-      {mediaModalOpen && selectedCampaign && (
-        <MediaUploadModal
+      {submitModalOpen && selectedCampaign && (
+        <CampaignSubmitModal
           campaign={selectedCampaign}
-          onClose={() => setMediaModalOpen(false)}
-          // onUpdateMedia={onUpdateMedia}
+          step={submitModalStep}
+          onStepChange={(step) => setSubmitModalStep(step)}
+          onClose={() => {
+            setSubmitModalStep(0)
+            setSubmitModalOpen(false)
+          }}
+          onSubmit={handleClickSubmit}
+          onEditTime={() => {
+            setSubmitModalStep(0)
+            setEditModalStep(0)
+            setSubmitModalOpen(false)
+            handleClickEdit(selectedCampaign)
+          }}
+          onMediaDelete={handleDeleteCampaignMedia}
         />
       )}
 
@@ -290,7 +314,10 @@ const Campaigns = () => {
         reservedSlots={selectedReservations}
         step={editModalStep}
         onStepChange={(step) => setEditModalStep(step)}
-        onClose={() => setEditModalOpen(false)}
+        onClose={() => {
+          setEditModalStep(0)
+          setEditModalOpen(false)
+        }}
         onReloadReservations={() => loadReservations(selectedCampaign)}
         onReservationsSubmit={handleEdit}
       />}

@@ -1,10 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne, RelationId, OneToOne } from 'typeorm';
+import { Entity, Column, JoinColumn, ManyToOne, RelationId } from 'typeorm';
 import { Defentity } from './defentity.entity';
-import { Campaign } from './campaign.entity';
 import { User } from './user.entity';
 
 @Entity('media')
-export class Media extends Defentity  {
+export class Media extends Defentity {
   @Column({ type: "uuid", unique: true })
   uuid: string;
 

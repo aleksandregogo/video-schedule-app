@@ -7,15 +7,19 @@ import { Input } from "../ui/input";
 type Props = {
   selectedReservations: Reservation[];
   title: string;
+  maxHeight: string;
   setTitle: (title: string) => void;
   setReservations: (reservations: Reservation[]) => void;
+  onEditTime?: () => void;
 };
 
 const Schedule = ({
   selectedReservations,
   title,
+  maxHeight = '45vh',
   setTitle,
-  setReservations
+  setReservations,
+  onEditTime
 }: Props) => {
   const allConfirmed = selectedReservations.every((s) => s.confirmed);
 
@@ -31,6 +35,12 @@ const Schedule = ({
   return (
     <div className="p-6 space-y-4 mt-4">
       {/* Title Input */}
+      {onEditTime && <Button
+        onClick={onEditTime}
+        // className="m-4"
+      >
+        Edit on time table
+      </Button>}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Campaign Title
@@ -60,7 +70,7 @@ const Schedule = ({
           </div>
         </div>
 
-        <div className="h-[45vh] overflow-auto">
+        <div className={`h-[${maxHeight}] overflow-auto`}>
           {selectedReservations.map(
             (slot, index) =>
               slot.canEdit && (

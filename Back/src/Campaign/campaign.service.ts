@@ -5,7 +5,7 @@ import { User } from "src/Entities/user.entity";
 import { GenerateUploadUrlCommand } from "src/Storage/Command/generate-upload-url.command";
 import { v4 } from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Equal, Repository } from "typeorm";
+import { Equal, FindOptionsRelations, Repository } from "typeorm";
 import { Campaign } from "src/Entities/campaign.entity";
 import { Media } from "src/Entities/media.entity";
 import { CreateCampaignDto } from "./Dto/create.campaign.dto";
@@ -19,6 +19,7 @@ import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto"
 import { Reservation } from "src/Entities/reservation.entity";
 import { ReservationStatus } from "src/Reservations/Enum/reservation.status.enum";
 import { EditCampaignDto } from "./Dto/edit.campaign.dto copy";
+import { GenerateDownloadUrlCommand } from "src/Storage/Command/generate-download-url.command";
 
 @Injectable()
 export class CampaignService {
@@ -192,20 +193,40 @@ export class CampaignService {
     })
   }
 
-  async findCampaignById(id: number, userId: number): Promise<Campaign> {
+  async findCampaignById(
+    id: number,
+    userId: number,
+    relations: FindOptionsRelations<Campaign> = {}
+  ): Promise<Campaign> {
     return await this.campaignRepository.findOne({
       where: {
         id: Equal(id),
         user: { id: Equal(userId) }
       },
-      relations: {
-        company: true
-      }
+      relations
     })
       .catch((err) => {
         console.error(err);
         return null;
       });
+  }
+
+  async generateDownloadUrl(user: UserInfo, campaignId: number) {
+    const campaign = await this.findCampaignById(campaignId, user.userLocalId, { media: true });
+
+    if (!campaign) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    }
+
+    if (!campaign.media || !campaign.media?.bucketName || !campaign.media?.key) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't have media`, HttpStatus.BAD_REQUEST);
+    }
+
+    const downloadUrl = await this.commandBus.execute(
+      new GenerateDownloadUrlCommand({ bucket: campaign.media?.bucketName, key: campaign.media?.key })
+    );
+
+    return { message: "Upload marked as complete", downloadUrl  };
   }
 
   async generateUploadUrl(user: UserInfo, fileUploadRequestDto: FileUploadRequestDto) {
@@ -272,8 +293,50 @@ export class CampaignService {
     }
 
     // Update campaign
-    await this.campaignRepository.update({ id: Equal(ownerId) }, { media: { id: media.id } });
+    const updatedCampaign = await this.campaignRepository.update({ id: Equal(ownerId) }, { media: { id: media.id } });
 
-    return { message: "Upload marked as complete" };
+    if (!updatedCampaign) {
+      await this.commandBus.execute(
+        new DeleteFileCommand({ bucket: this.configService.get('S3_MEDIA_BUCKET'), key })
+      );
+      throw new BadRequestException('Something went wrong while updating DB');
+    }
+
+    const downloadUrl = await this.commandBus.execute(
+      new GenerateDownloadUrlCommand({ bucket: this.configService.get('S3_MEDIA_BUCKET'), key: key })
+    );
+
+    return { message: "Upload marked as complete", downloadUrl  };
+  }
+
+  async deleteCampaignMedia(userLocalId: number, campaignId: number) {
+    const campaign = await this.findCampaignById(campaignId, userLocalId, { media: true });
+
+    if (!campaign) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    }
+
+    if (!campaign.media || !campaign.media?.bucketName || !campaign.media?.key) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't have media`, HttpStatus.BAD_REQUEST);
+    }
+
+    await this.commandBus.execute(
+      new DeleteFileCommand({ bucket: campaign.media.bucketName, key: campaign.media.key })
+    );
+
+    const deletedCampaignMedia = await this.mediaRepository.delete({
+      id: Equal(campaign.media.id),
+      user: {
+        id: Equal(userLocalId)
+      }
+    })
+      .catch((err) => {
+        console.log(err);
+        return null;
+      });
+
+    if (!deletedCampaignMedia) {
+      throw new BadRequestException('Something went wrong while updating DB');
+    }    
   }
 }

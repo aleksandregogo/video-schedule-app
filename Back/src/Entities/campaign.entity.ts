@@ -1,4 +1,4 @@
-import { Entity, Column, JoinColumn, ManyToOne, RelationId, OneToMany } from 'typeorm';
+import { Entity, Column, JoinColumn, ManyToOne, RelationId, OneToMany, OneToOne } from 'typeorm';
 import { Defentity } from './defentity.entity';
 import { Screen } from './screen.entity';
 import { Company } from './company.entity';
@@ -36,7 +36,7 @@ export class Campaign extends Defentity  {
   @RelationId((campaign: Campaign) => campaign.user)
   userId: number;
 
-  @ManyToOne(() => Campaign, (media) => media.id)
+  @OneToOne(() => Media, (media) => media.id, { cascade: true, onDelete: "SET NULL" })
   @JoinColumn()
   media: Media;
 

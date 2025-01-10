@@ -152,6 +152,7 @@ const ScreenTimeSlotsModal = ({
             setReservations={(reservations) => setReservations(reservations)}
             title={changedCampaignTitle}
             setTitle={(title) => setChangedCampaignTitle(title)}
+            maxHeight="45vh"
           />
         ) : (
           <div className="p-6 flex flex-col items-center justify-center space-y-6">
@@ -193,7 +194,7 @@ const ScreenTimeSlotsModal = ({
           {/* Price Display */}
           <div className="text-right">
             <p className="text-sm font-medium text-gray-700">
-              Calculated Price: <span className="text-lg font-semibold">{totalPrice}$</span>
+              Approximately Price will be: <span className="text-lg font-semibold">{totalPrice}$</span>
             </p>
           </div>
         </div>}

@@ -16,9 +16,9 @@ import { EditCampaignDto } from "./Dto/edit.campaign.dto copy";
 @UseGuards(AuthGuard('cookie'))
 @ApiTags('Campaign')
 export class CampaignController {
-  constructor(private readonly campaignService: CampaignService) {}
+  constructor(private readonly campaignService: CampaignService) { }
 
-  @ApiOperation({summary: 'Create campaign'})
+  @ApiOperation({ summary: 'Create campaign' })
   @Post()
   async createCampaign(
     @Req() req: Request,
@@ -31,7 +31,7 @@ export class CampaignController {
     return new CampaignPresentation().present(campaign);
   }
 
-  @ApiOperation({summary: 'Update campaign'})
+  @ApiOperation({ summary: 'Update campaign' })
   @Put(':id')
   async editCampaign(
     @Req() req: Request,
@@ -45,22 +45,22 @@ export class CampaignController {
     return new CampaignPresentation().present(campaign);
   }
 
-    @ApiOperation({summary: 'Delete campaign'})
-    @UseGuards(AuthGuard('cookie'))
-    @Delete(':id')
-    @HttpCode(204)
-    async deleteCampaign(
-      @Req() req,
-      @Param('id', ParseIntPipe) screenId: number
-    ) {
-      const userInfo = req.user as UserInfo;
-  
-      await this.campaignService.deleteCampaign(userInfo.userLocalId, screenId);
-  
-      return new SuccessResponseObjectDto({})
-    }
+  @ApiOperation({ summary: 'Delete campaign' })
+  @UseGuards(AuthGuard('cookie'))
+  @Delete(':id')
+  @HttpCode(204)
+  async deleteCampaign(
+    @Req() req,
+    @Param('id', ParseIntPipe) campaignId: number
+  ) {
+    const userInfo = req.user as UserInfo;
 
-  @ApiOperation({summary: 'Get all campaigns'})
+    await this.campaignService.deleteCampaign(userInfo.userLocalId, campaignId);
+
+    return new SuccessResponseObjectDto({})
+  }
+
+  @ApiOperation({ summary: 'Get all campaigns' })
   @Get('all')
   async getCampaigns(@Req() req: Request) {
     const userInfo = req.user as UserInfo;
@@ -77,7 +77,7 @@ export class CampaignController {
     });
   }
 
-  @ApiOperation({summary: 'Get campaign reservations'})
+  @ApiOperation({ summary: 'Get campaign reservations' })
   @Get(':id/reservations')
   async getCampaignReservations(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
     const userInfo = req.user as UserInfo;
@@ -92,6 +92,14 @@ export class CampaignController {
     return new SuccessResponseObjectDto({
       data: new ReservationPresentation().presentList(reservations)
     });
+  }
+
+  @ApiOperation({ summary: 'Get campaign media url' })
+  @Get(':id/media/download-request')
+  async getUrl(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
+    const user = req.user as UserInfo;
+
+    return await this.campaignService.generateDownloadUrl(user, id);
   }
 
   @Post("media/upload-request")
@@ -118,5 +126,20 @@ export class CampaignController {
     const user = req.user as UserInfo;
 
     return this.campaignService.markUploadComplete(user, fileUploadCompleteDto);
+  }
+
+  @ApiOperation({ summary: 'Delete campaign media' })
+  @UseGuards(AuthGuard('cookie'))
+  @Delete('media/:id')
+  @HttpCode(204)
+  async deleteCampaignMedia(
+    @Req() req,
+    @Param('id', ParseIntPipe) campaignId: number
+  ) {
+    const userInfo = req.user as UserInfo;
+
+    await this.campaignService.deleteCampaignMedia(userInfo.userLocalId, campaignId);
+
+    return new SuccessResponseObjectDto({})
   }
 }

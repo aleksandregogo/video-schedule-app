@@ -5,6 +5,13 @@ export interface Reservation extends SelectedSlotInfo {
   confirmed?: boolean;
 };
 
+export interface ReservationDto {
+  id: number;
+  name: string;
+  startTime: Date;
+  endTime: Date;
+}
+
 export enum ReservationStatus {
   CONFIRMED = 'CONFIRMED',
   REJECTED = 'REJECTED',
