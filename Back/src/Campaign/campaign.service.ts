@@ -145,14 +145,14 @@ export class CampaignService {
     return updatedCampaign;
   }
 
-  async submitCampaignForReview (user: User, campaignId: number) {
+  async changeCampaignReviewStatus (user: User, campaignId: number, status: CampaignStatus.CREATED | CampaignStatus.PENDING) {
     const campaign = await this.findCampaignById(campaignId, user.id);
 
     if (!campaign) {
       throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
     }
 
-    campaign.status = CampaignStatus.PENDING;
+    campaign.status = status;
 
     const updatedCampaign = await this.campaignRepository.save(campaign);
 

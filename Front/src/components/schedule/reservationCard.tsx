@@ -5,18 +5,19 @@ import { Checkbox } from "../ui/checkbox";
 
 type Props = {
   reservation: Reservation;
-  duration: number;
-  handleCheckboxChange: (checked: boolean) => void;
+  handleCheckboxChange?: (checked: boolean) => void;
 };
 
 const ReservationCard = ({
   reservation,
-  duration,
   handleCheckboxChange,
 }: Props) => {
-  const formattedDate = format(new Date(reservation.start), "PPPP");
-  const formattedStartTime = format(new Date(reservation.start), "HH:mm:ss");
+  const startDate = new Date(reservation.start);
+  const endDate = new Date(reservation.end);
+  const formattedDate = format(startDate, "PPPP");
+  const formattedStartTime = format(startDate, "HH:mm:ss");
   const formattedEndTime = format(new Date(reservation.end), "HH:mm:ss");
+  const duration = (endDate.getTime() - startDate.getTime()) / 1000;
 
   return (
     <Card className="flex items-center justify-between p-4 bg-white shadow-sm rounded-md">
@@ -27,11 +28,11 @@ const ReservationCard = ({
         </CardDescription>
         <p className="text-sm font-medium text-gray-700 mt-2">Duration: {duration} seconds</p>
       </CardContent>
-      <Checkbox
+      {handleCheckboxChange && <Checkbox
         checked={reservation.confirmed}
         onCheckedChange={(checked) => handleCheckboxChange(checked as boolean)}
         className="ml-4"
-      />
+      />}
     </Card>
   );
 };

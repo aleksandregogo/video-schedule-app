@@ -8,6 +8,7 @@ type Props = {
   selectedReservations: Reservation[];
   title: string;
   maxHeight: string;
+  canEdit?: boolean;
   setTitle: (title: string) => void;
   setReservations: (reservations: Reservation[]) => void;
   onEditTime?: () => void;
@@ -17,6 +18,7 @@ const Schedule = ({
   selectedReservations,
   title,
   maxHeight = 'h-[45vh]',
+  canEdit = true,
   setTitle,
   setReservations,
   onEditTime
@@ -42,24 +44,31 @@ const Schedule = ({
         Edit on time table
       </Button>}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Campaign Title
-        </label>
-        <Input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter a title"
-          className="mt-1"
-        />
+        {canEdit ?
+          <>
+            <label className="block text-sm font-medium text-gray-700">
+              Campaign Title:
+            </label>
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter a title"
+              className="mt-1"
+            />
+          </> :
+          <label className="block text-sm font-medium text-gray-700">
+            Campaign Title: <strong>{title}</strong>
+          </label>
+        }
       </div>
 
       {/* Slots Summary */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Confirm Reservations</h2>
+          <h2 className="text-lg font-semibold">Reservations</h2>
           {/* Checkbox to Confirm/Deny All */}
-          <div
+          {canEdit && <div
             className="flex items-center space-x-2 p-4 cursor-pointer"
             onClick={() => handleToggleAll(!allConfirmed)}
           >
@@ -67,7 +76,7 @@ const Schedule = ({
             <Checkbox
               checked={allConfirmed}
             />
-          </div>
+          </div>}
         </div>
 
         <div className={`${maxHeight} overflow-auto`}>
@@ -77,8 +86,8 @@ const Schedule = ({
                 <ReservationCard
                   key={index}
                   reservation={slot}
-                  duration={30}
-                  handleCheckboxChange={(checked) => {
+                  handleCheckboxChange={
+                    canEdit ? (checked) => {
                     setReservations(
                       selectedReservations.map((s) =>
                         s.id === slot.id
@@ -89,7 +98,7 @@ const Schedule = ({
                           : s
                       )
                     )
-                  }}
+                  } : null}
                 />
               )
           )}

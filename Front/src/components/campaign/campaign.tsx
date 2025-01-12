@@ -6,12 +6,14 @@ const Campaign = ({
   campaign,
   onDelete,
   onEdit,
-  onSubmit
+  onSubmit,
+  onCancel
 }: {
   campaign: CampaignView,
   onDelete: (campaign: CampaignView) => void;
   onEdit: (campaign: CampaignView) => void;
   onSubmit: (campaign: CampaignView) => void;
+  onCancel: (campaign: CampaignView) => void;
 }) => {
   const StatusColors = {
     confirmed: "border-green-500",
@@ -40,6 +42,8 @@ const Campaign = ({
       break;
   }
 
+  const canEdit = campaign?.status !== CampaignStatus.PENDING;
+
   return (
     <div
       key={campaign.id}
@@ -63,17 +67,17 @@ const Campaign = ({
       <div className="flex justify-between items-center mt-4">
         {/* Left-aligned buttons */}
         <div className="flex space-x-4">
-          <Button
+          {canEdit && <Button
             variant="outline"
             onClick={() => onEdit(campaign)}
           >
             <CalendarArrowUp/>
-          </Button>
+          </Button>}
           <Button
             variant="destructive"
-            onClick={() => onDelete(campaign)}
+            onClick={() => canEdit ? onDelete(campaign) : onCancel(campaign)}
           >
-            <Trash2 className="w-5 h-5" />
+            {canEdit ? <Trash2 className="w-5 h-5" /> : 'Cancel'}
           </Button>
         </div>
 
@@ -81,7 +85,7 @@ const Campaign = ({
         <Button
           onClick={() => onSubmit(campaign)}
         >
-          Submit
+          {canEdit ? 'Submit' : 'View'}
         </Button>
       </div>
     </div>

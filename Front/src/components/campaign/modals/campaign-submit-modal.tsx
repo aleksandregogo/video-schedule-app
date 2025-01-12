@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@radix-ui/react-label";
 import CampaignSubmitModalHeader from "./campaign-submit-modal-header";
 import { Reservation } from "@/components/screen/types";
-import { CampaignView } from "@/pages/campaigns";
+import { CampaignStatus, CampaignView } from "@/pages/campaigns";
 import FileUploader from "@/components/file-uploader";
 import { Clapperboard, Trash2 } from "lucide-react";
 
@@ -36,6 +36,8 @@ const CampaignSubmitModal = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoDuration, setVideoDuration] = useState<number>(0);
+
+  const canEdit = campaign?.status !== CampaignStatus.PENDING;
 
   useEffect(() => {
     if (campaign) {
@@ -72,6 +74,7 @@ const CampaignSubmitModal = ({
           name={campaign.name}
           step={step}
           setStep={onStepChange}
+          showNextStep={!canEdit}
         />
         {step === 0 ? (
           <div className="relative h-80 w-50 m-4">
@@ -89,15 +92,15 @@ const CampaignSubmitModal = ({
                     controls
                     className="bg-black w-full h-full"
                   />
-                  <Button
+                  {canEdit && <Button
                     variant="destructive"
                     onClick={onMediaDelete}
                     className="my-2"
                   >
                     <Trash2 className="w-5 h-5" />
-                  </Button>
+                  </Button>}
 
-                  {videoDuration > 0 && <>
+                  {videoDuration > 0 && canEdit && <>
                     <p>
                       Your media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
                     </p>
@@ -132,10 +135,11 @@ const CampaignSubmitModal = ({
               setReservations={(reservations) => setReservations(reservations)}
               title={changedCampaignTitle}
               setTitle={(title) => setChangedCampaignTitle(title)}
-              onEditTime={onEditTime}
-              maxHeight="h-[30vh]"
+              onEditTime={canEdit ? onEditTime : null}
+              canEdit={canEdit}
+              maxHeight={canEdit ? "h-[30vh]" : "h-[50vh]"}
             />
-            <div className="m-4">
+            {canEdit && <div className="m-4">
               <p>
                 Your media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
               </p>
@@ -151,7 +155,7 @@ const CampaignSubmitModal = ({
                   Request review
                 </Button>
               </div>
-            </div>
+            </div>}
           </>
         )}
       </DialogContent>

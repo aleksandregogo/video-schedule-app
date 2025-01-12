@@ -102,6 +102,18 @@ const Campaigns = () => {
     setSubmitModalOpen(true);
   }
 
+  const handleClickCancel = async (campaign: CampaignView) => {
+    await changeCampaignReviewStatus(campaign.id, 'cancel')
+      .then(() => {
+        fetchCampaigns();
+        toast({
+          title: "Campaign review canceled",
+          description: `You can now modifie or delete your campaign`,
+          variant: "success",
+        });
+      })
+  }
+
   const handleClickEdit = async (campaign: CampaignView) => {
     await loadReservations(campaign);
     setSelectedCampaign(campaign);
@@ -257,8 +269,8 @@ const Campaigns = () => {
       });
   };
 
-  const requestCampaignReview = async () => {
-    return await APIClient.post(`/campaign/${selectedCampaign.id}/submit`)
+  const changeCampaignReviewStatus = async (campaignId: number, action: 'submit' | 'cancel') => {
+    return await APIClient.post(`/campaign/review/${campaignId}/${action}`)
       .then((response) => {
         const data = response.data;
         if (data && data.id) {
@@ -278,7 +290,7 @@ const Campaigns = () => {
     const updatedReservations = await updateCampaignReservations(reservations, name);
 
     if (updatedReservations) {
-      await requestCampaignReview()
+      await changeCampaignReviewStatus(selectedCampaign.id, 'submit')
         .then(() => {
           setSelectedCampaign(null);
           setSubmitModalOpen(false);
@@ -304,6 +316,7 @@ const Campaigns = () => {
             onSubmit={handleClickReview}
             onEdit={handleClickEdit}
             onDelete={handleClickDelete}
+            onCancel={handleClickCancel}
           />
         ))}
       </div>

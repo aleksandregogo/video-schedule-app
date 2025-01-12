@@ -11,6 +11,7 @@ import { FileUploadCompleteDto } from "src/Storage/Dto/file.upload.complete.dto"
 import { CampaignService } from "./campaign.service";
 import { ReservationPresentation } from "src/Reservations/Presentation/reservation.presentation";
 import { EditCampaignDto } from "./Dto/edit.campaign.dto copy";
+import { CampaignStatus } from "./Enum/campaign.status.enum";
 
 @Controller("campaign")
 @UseGuards(AuthGuard('cookie'))
@@ -46,14 +47,27 @@ export class CampaignController {
   }
 
   @ApiOperation({ summary: 'Submit campaign for review' })
-  @Post(':id/submit')
+  @Post('/review/:id/submit')
   async submitCampaignForReview(
     @Req() req: Request,
     @Param('id', ParseIntPipe) id: number
   ) {
     const user = req.user as UserInfo;
 
-    const campaign = await this.campaignService.submitCampaignForReview(user.user, id);
+    const campaign = await this.campaignService.changeCampaignReviewStatus(user.user, id, CampaignStatus.PENDING);
+
+    return new CampaignPresentation().present(campaign);
+  }
+
+  @ApiOperation({ summary: 'Cancel campaign review' })
+  @Post('/review/:id/cancel')
+  async cancelCampaignReview(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number
+  ) {
+    const user = req.user as UserInfo;
+
+    const campaign = await this.campaignService.changeCampaignReviewStatus(user.user, id, CampaignStatus.CREATED);
 
     return new CampaignPresentation().present(campaign);
   }

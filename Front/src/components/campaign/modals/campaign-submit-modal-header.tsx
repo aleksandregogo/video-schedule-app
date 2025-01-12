@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 type Props = {
   name: string;
   step: number;
+  showNextStep: boolean;
   setStep: (step: number) => void;
 }
 
 const CampaignSubmitModalHeader = ({
   name,
   step,
+  showNextStep,
   setStep
 }: Props) => {
   return (
@@ -22,6 +24,14 @@ const CampaignSubmitModalHeader = ({
           >
             Previous
           </Button>
+        }
+        {step === 0 && showNextStep &&
+          <Button
+            onClick={() => setStep(1)}
+            className="px-4 py-2 mr-2 text-white font-semibold rounded-md"
+          >
+            Next
+          </Button> 
         }
       </div>
     </div>
