@@ -45,6 +45,19 @@ export class CampaignController {
     return new CampaignPresentation().present(campaign);
   }
 
+  @ApiOperation({ summary: 'Submit campaign for review' })
+  @Post(':id/submit')
+  async submitCampaignForReview(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number
+  ) {
+    const user = req.user as UserInfo;
+
+    const campaign = await this.campaignService.submitCampaignForReview(user.user, id);
+
+    return new CampaignPresentation().present(campaign);
+  }
+
   @ApiOperation({ summary: 'Delete campaign' })
   @UseGuards(AuthGuard('cookie'))
   @Delete(':id')

@@ -43,7 +43,7 @@ export class Campaign extends Defentity  {
   @RelationId((campaign: Campaign) => campaign.media)
   mediaId: number;
 
-  @Column({ type: 'varchar', length: 20, default: CampaignStatus.PENDING })
+  @Column({ type: 'varchar', length: 20, default: CampaignStatus.CREATED })
   status: CampaignStatus;
 
   @OneToMany(() => Reservation, (reservation) => reservation.campaign, { cascade: true })

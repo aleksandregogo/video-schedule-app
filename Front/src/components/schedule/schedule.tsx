@@ -1,8 +1,8 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Reservation } from "../screen/types";
 import { Button } from "../ui/button";
-import { formatDateTimeLocal } from "@/lib/utils";
 import { Input } from "../ui/input";
+import ReservationCard from "./reservationCard";
 
 type Props = {
   selectedReservations: Reservation[];
@@ -16,7 +16,7 @@ type Props = {
 const Schedule = ({
   selectedReservations,
   title,
-  maxHeight = '45vh',
+  maxHeight = 'h-[45vh]',
   setTitle,
   setReservations,
   onEditTime
@@ -70,38 +70,27 @@ const Schedule = ({
           </div>
         </div>
 
-        <div className={`h-[${maxHeight}] overflow-auto`}>
+        <div className={`${maxHeight} overflow-auto`}>
           {selectedReservations.map(
             (slot, index) =>
               slot.canEdit && (
-                <div
+                <ReservationCard
                   key={index}
-                  className="flex items-center justify-between p-4 bg-gray-100 rounded-md shadow-sm"
-                >
-                  <div>
-                    <p>
-                      <strong>Start:</strong> {formatDateTimeLocal(slot.start)}
-                    </p>
-                    <p>
-                      <strong>End:</strong> {formatDateTimeLocal(slot.end)}
-                    </p>
-                  </div>
-                  <Checkbox
-                    checked={slot.confirmed}
-                    onCheckedChange={(checked) =>
-                      setReservations(
-                        selectedReservations.map((s) =>
-                          s.id === slot.id
-                            ? {
-                                ...s,
-                                confirmed: !!checked,
-                              }
-                            : s
-                        )
+                  reservation={slot}
+                  duration={30}
+                  handleCheckboxChange={(checked) => {
+                    setReservations(
+                      selectedReservations.map((s) =>
+                        s.id === slot.id
+                          ? {
+                              ...s,
+                              confirmed: !!checked,
+                            }
+                          : s
                       )
-                    }
-                  />
-                </div>
+                    )
+                  }}
+                />
               )
           )}
         </div>

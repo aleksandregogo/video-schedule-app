@@ -152,7 +152,7 @@ const ScreenTimeSlotsModal = ({
             setReservations={(reservations) => setReservations(reservations)}
             title={changedCampaignTitle}
             setTitle={(title) => setChangedCampaignTitle(title)}
-            maxHeight="45vh"
+            maxHeight="h-[45vh]"
           />
         ) : (
           <div className="p-6 flex flex-col items-center justify-center space-y-6">

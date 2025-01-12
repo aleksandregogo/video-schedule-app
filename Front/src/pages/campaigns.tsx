@@ -11,6 +11,7 @@ import Campaign from "@/components/campaign/campaign";
 import CampaignSubmitModal from "@/components/campaign/modals/campaign-submit-modal";
 
 export enum CampaignStatus {
+  CREATED = 'CREATED',
   CONFIRMED = 'CONFIRMED',
   REJECTED = 'REJECTED',
   PENDING = 'PENDING',
@@ -256,19 +257,40 @@ const Campaigns = () => {
       });
   };
 
-  const handleClickSubmit = async (reservations: Reservation[], name: string) => {
-    await updateCampaignReservations(reservations, name)
-      .then(() => {
-        setSelectedCampaign(null);
-        setSubmitModalOpen(false);
-        setSubmitModalStep(0);
-        fetchCampaigns();
-        toast({
-          title: "Campaign review requested",
-          description: `Review requested for Campaign #${selectedCampaign.name}. Wait for moderator to approve. you'll be notified`,
-          variant: "success",
-        });
+  const requestCampaignReview = async () => {
+    return await APIClient.post(`/campaign/${selectedCampaign.id}/submit`)
+      .then((response) => {
+        const data = response.data;
+        if (data && data.id) {
+          return true;
+        } else {
+          console.error("Error submiting campaign for review", response?.data);
+          return null;
+        }
       })
+      .catch((err) => {
+        console.error("Error submiting campaign for review", err);
+        return null;
+      });
+  }
+
+  const handleClickSubmit = async (reservations: Reservation[], name: string) => {
+    const updatedReservations = await updateCampaignReservations(reservations, name);
+
+    if (updatedReservations) {
+      await requestCampaignReview()
+        .then(() => {
+          setSelectedCampaign(null);
+          setSubmitModalOpen(false);
+          setSubmitModalStep(0);
+          fetchCampaigns();
+          toast({
+            title: "Campaign review requested",
+            description: `Review requested for Campaign #${selectedCampaign.name}. Wait for moderator to approve. you'll be notified`,
+            variant: "success",
+          });
+        })
+    }
   }
 
   return (

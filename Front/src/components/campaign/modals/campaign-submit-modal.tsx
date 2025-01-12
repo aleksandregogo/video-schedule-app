@@ -133,7 +133,7 @@ const CampaignSubmitModal = ({
               title={changedCampaignTitle}
               setTitle={(title) => setChangedCampaignTitle(title)}
               onEditTime={onEditTime}
-              maxHeight="30vh"
+              maxHeight="h-[30vh]"
             />
             <div className="m-4">
               <p>

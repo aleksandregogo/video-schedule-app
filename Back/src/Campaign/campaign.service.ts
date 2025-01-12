@@ -20,6 +20,7 @@ import { Reservation } from "src/Entities/reservation.entity";
 import { ReservationStatus } from "src/Reservations/Enum/reservation.status.enum";
 import { EditCampaignDto } from "./Dto/edit.campaign.dto copy";
 import { GenerateDownloadUrlCommand } from "src/Storage/Command/generate-download-url.command";
+import { CampaignStatus } from "./Enum/campaign.status.enum";
 
 @Injectable()
 export class CampaignService {
@@ -139,6 +140,24 @@ export class CampaignService {
 
     if (!deletedReservations) {
       throw new HttpException(`Something went wrong while updating reservations`, HttpStatus.BAD_REQUEST);
+    }
+
+    return updatedCampaign;
+  }
+
+  async submitCampaignForReview (user: User, campaignId: number) {
+    const campaign = await this.findCampaignById(campaignId, user.id);
+
+    if (!campaign) {
+      throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
+    }
+
+    campaign.status = CampaignStatus.PENDING;
+
+    const updatedCampaign = await this.campaignRepository.save(campaign);
+
+    if (!updatedCampaign) {
+      throw new HttpException(`Something went wrong while updating campaign`, HttpStatus.BAD_REQUEST);
     }
 
     return updatedCampaign;

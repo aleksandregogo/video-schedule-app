@@ -56,7 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             console.error('User info is not present in response');
           }
         })
-        .catch((err) => console.error('Error fetching user info:', err))
+        .catch((err) => {
+          console.error('Error fetching user info:', err);
+          navigate('/')
+        })
         .finally(() => {
           checkedAuth.current = true;
           setLoading(false);
