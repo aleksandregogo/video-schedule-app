@@ -52,9 +52,49 @@ export class CampaignController {
     @Req() req: Request,
     @Param('id', ParseIntPipe) id: number
   ) {
-    const user = req.user as UserInfo;
+    const userInfo = req.user as UserInfo;
 
-    const campaign = await this.campaignService.changeCampaignReviewStatus(user.user, id, CampaignStatus.PENDING);
+    const campaign = await this.campaignService.changeCampaignReviewStatus(userInfo, id, CampaignStatus.PENDING);
+
+    return new CampaignPresentation().present(campaign);
+  }
+
+  @ApiOperation({ summary: 'Confirm campaign for review' })
+  @Post('/review/:id/confirm')
+  async confirmCampaignForReview(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number
+  ) {
+    const userInfo = req.user as UserInfo;
+
+    if (!userInfo.company?.id) {
+      throw new HttpException({
+        message: 'Access denied.',
+        errorCode: 0,
+      }, HttpStatus.UNAUTHORIZED)
+    }
+
+    const campaign = await this.campaignService.changeCampaignReviewStatus(userInfo, id, CampaignStatus.CONFIRMED);
+
+    return new CampaignPresentation().present(campaign);
+  }
+
+  @ApiOperation({ summary: 'Confirm campaign for review' })
+  @Post('/review/:id/reject')
+  async rejectCampaignForReview(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number
+  ) {
+    const userInfo = req.user as UserInfo;
+
+    if (!userInfo.company?.id) {
+      throw new HttpException({
+        message: 'Access denied.',
+        errorCode: 0,
+      }, HttpStatus.UNAUTHORIZED)
+    }
+
+    const campaign = await this.campaignService.changeCampaignReviewStatus(userInfo, id, CampaignStatus.REJECTED);
 
     return new CampaignPresentation().present(campaign);
   }
@@ -65,9 +105,9 @@ export class CampaignController {
     @Req() req: Request,
     @Param('id', ParseIntPipe) id: number
   ) {
-    const user = req.user as UserInfo;
+    const userInfo = req.user as UserInfo;
 
-    const campaign = await this.campaignService.changeCampaignReviewStatus(user.user, id, CampaignStatus.CREATED);
+    const campaign = await this.campaignService.changeCampaignReviewStatus(userInfo, id, CampaignStatus.CREATED);
 
     return new CampaignPresentation().present(campaign);
   }
@@ -132,7 +172,7 @@ export class CampaignController {
   async getCampaignReservations(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
     const userInfo = req.user as UserInfo;
 
-    const reservations = await this.campaignService.getCampaignReservations(id, userInfo.userLocalId);
+    const reservations = await this.campaignService.getCampaignReservations(id, userInfo);
 
     if (!reservations) throw new HttpException({
       message: `Error on selecting reservations for campaign with id: ${id}`,

@@ -3,16 +3,12 @@ import { Button } from "../ui/button";
 
 const CampaignReview = ({
   campaign,
-  // onDelete,
-  // onEdit,
   onReview,
-  // onCancel
+  onReject
 }: {
   campaign: CampaignView,
-  // onDelete: (campaign: CampaignView) => void;
-  // onEdit: (campaign: CampaignView) => void;
-  onReview: (campaign: CampaignView) => void;
-  // onCancel: (campaign: CampaignView) => void;
+  onReview: () => void;
+  onReject: () => void;
 }) => {
   const StatusColors = {
     confirmed: "border-green-500",
@@ -37,6 +33,8 @@ const CampaignReview = ({
       break;
   }
 
+  const isConfirmed = campaign?.status === CampaignStatus.CONFIRMED;
+
   return (
     <div
       key={campaign.id}
@@ -53,9 +51,10 @@ const CampaignReview = ({
       </p>
       <div className="flex justify-between items-center mt-4">
         <Button
-          onClick={() => onReview(campaign)}
+          variant={isConfirmed ? "destructive" : "default"}
+          onClick={isConfirmed ? onReject : onReview}
         >
-          Start Review
+          {isConfirmed ? 'Reject' : 'Start Review'}
         </Button>
       </div>
     </div>

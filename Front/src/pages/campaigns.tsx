@@ -129,7 +129,7 @@ const Campaigns = () => {
     const reservedTimes: ReservationDto[] = [];
 
     reservations.forEach((reservation) => {
-      if (reservation.canEdit) {
+      if (reservation.canEdit && reservation.confirmed) {
         reservedTimes.push({
           id: reservation.id || null,
           name: reservation.title,

@@ -97,7 +97,7 @@ export const deleteCampaign = async (campaignId: number) => {
     });
 }
 
-export type CampaignReviewAction = 'submit' | 'cancel';
+export type CampaignReviewAction = 'submit' | 'cancel' | 'confirm' | 'reject';
 
 export const updateCampaignReviewStatus = async (campaignId: number, action: CampaignReviewAction) => {
   return await APIClient.post(`/campaign/review/${campaignId}/${action}`)

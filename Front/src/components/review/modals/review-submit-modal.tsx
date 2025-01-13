@@ -39,13 +39,12 @@ const ReviewSubmitModal = ({
     }
   }, [campaign])
 
-  const handleDurationSubmit = () => {
-
+  const calculatePrice = (duration: number) => {
     const fixedReservations = reservations.map((reservation) => {
       const startTime = new Date(reservation.start);
       const endTime = startTime;
 
-      endTime.setSeconds(endTime.getSeconds() + Math.round(videoDuration));
+      endTime.setSeconds(endTime.getSeconds() + Math.round(duration));
       
       return {
         ...reservation,
@@ -54,9 +53,8 @@ const ReviewSubmitModal = ({
     });
 
     if (fixedReservations?.length) {
-      setTotalPrice((fixedReservations.length * videoDuration * campaign.screen.price).toFixed(2));
+      setTotalPrice((fixedReservations.length * duration * campaign.screen.price).toFixed(2));
       setReservations(fixedReservations);
-      onStepChange(1)
     }
   }
 
@@ -68,7 +66,7 @@ const ReviewSubmitModal = ({
           name={campaign.name}
           step={step}
           setStep={onStepChange}
-          showNextStep={true}
+          showNextStep={videoDuration > 0}
         />
         {step === 0 ? (
           <div className="relative h-80 w-50 m-4">
@@ -81,6 +79,7 @@ const ReviewSubmitModal = ({
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
                         setVideoDuration(videoRef.current.duration);
+                        calculatePrice(videoRef.current.duration);
                       }
                     }}
                     controls
@@ -91,13 +90,9 @@ const ReviewSubmitModal = ({
                     <p>
                       Media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
                     </p>
-                    <p>Selected time slots will be corrected by this duration.</p>
-                    <div>
-                      <Label htmlFor="text-input"> Click continue to do so</Label>
-                      <Button variant="default" className="ml-2" onClick={handleDurationSubmit}>
-                        Submit
-                      </Button>
-                    </div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Total price is: <span className="text-lg font-semibold">{totalPrice}$</span>
+                    </p>
                   </>}
                 </>
               }
@@ -111,7 +106,7 @@ const ReviewSubmitModal = ({
               setTitle={(title) => setChangedCampaignTitle(title)}
               onEditTime={null}
               canEdit={false}
-              maxHeight="h-[50vh]"
+              maxHeight="h-[45vh]"
             />
             <div className="m-4">
               <p>
@@ -120,11 +115,11 @@ const ReviewSubmitModal = ({
               <p className="text-sm font-medium text-gray-700">
                 Total price is: <span className="text-lg font-semibold">{totalPrice}$</span>
               </p>
-              <div>
-                <Button variant="destructive" className="ml-2" onClick={onReject}>
+              <div className="mt-2">
+                <Button variant="destructive" onClick={onReject}>
                   Reject
                 </Button>
-                <Button variant="destructive" className="ml-2" onClick={onConfirm}>
+                <Button variant="default" className="ml-2" onClick={onConfirm}>
                   Confirm
                 </Button>
               </div>

@@ -3,9 +3,12 @@ import CampaignReview from "@/components/review/campaignReview";
 import ReviewSubmitModal from "@/components/review/modals/review-submit-modal";
 import { CampaignView } from "@/components/campaign/types";
 import { fetchReservations } from "@/actions/reservation";
-import { fetchAllCampaigns, fetchCampaignMedia } from "@/actions/campaign";
+import { CampaignReviewAction, fetchAllCampaigns, fetchCampaignMedia, updateCampaignReviewStatus } from "@/actions/campaign";
+import { useToast } from "@/hooks/ui/use-toast";
 
 const Reviews = () => {
+  const { toast } = useToast();
+
   const [campaigns, setCampaigns] = useState<CampaignView[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignView | null>(null);
 
@@ -40,6 +43,24 @@ const Reviews = () => {
     setReviewModalOpen(true)
   }
 
+  const handleStatusChange = async (campaignId: number, action: CampaignReviewAction) => {
+    const updated = await updateCampaignReviewStatus(campaignId, action)
+
+    if (updated) {
+      await refreshCampaigns();
+
+      setReviewModalStep(0)
+      setReviewModalOpen(false)
+      if (selectedCampaign) setSelectedCampaign(null);
+
+      toast({
+        title: "Campaign review canceled",
+        description: `You can now modifie or delete your campaign`,
+        variant: "success",
+      });
+    }
+  }
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Reviews</h1>
@@ -49,6 +70,7 @@ const Reviews = () => {
             key={campaign.uuid}
             campaign={campaign}
             onReview={() => handleClickReview(campaign)}
+            onReject={() => handleStatusChange(campaign.id, 'reject')}
           />
         ))}
       </div>
@@ -63,8 +85,8 @@ const Reviews = () => {
             setReviewModalStep(0)
             setReviewModalOpen(false)
           }}
-          onConfirm={() => {}}
-          onReject={() => {}}
+          onConfirm={() => handleStatusChange(selectedCampaign.id, 'confirm')}
+          onReject={() => handleStatusChange(selectedCampaign.id, 'reject')}
         />
       )}
     </div>

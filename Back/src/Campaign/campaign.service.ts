@@ -5,7 +5,7 @@ import { User } from "src/Entities/user.entity";
 import { GenerateUploadUrlCommand } from "src/Storage/Command/generate-upload-url.command";
 import { v4 } from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Equal, FindOptionsRelations, In, Repository } from "typeorm";
+import { Equal, FindOptionsRelations, FindOptionsWhere, In, Repository } from "typeorm";
 import { Campaign } from "src/Entities/campaign.entity";
 import { Media } from "src/Entities/media.entity";
 import { CreateCampaignDto } from "./Dto/create.campaign.dto";
@@ -145,8 +145,9 @@ export class CampaignService {
     return updatedCampaign;
   }
 
-  async changeCampaignReviewStatus (user: User, campaignId: number, status: CampaignStatus.CREATED | CampaignStatus.PENDING) {
-    const campaign = await this.findCampaignById(campaignId, user.id);
+  async changeCampaignReviewStatus (userInfo: UserInfo, campaignId: number, status: CampaignStatus) {
+    const companyId = userInfo?.company?.id || null;
+    const campaign = await this.findCampaignById(campaignId, (companyId ? null : userInfo.userLocalId), companyId);
 
     if (!campaign) {
       throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
@@ -214,7 +215,7 @@ export class CampaignService {
       where: {
         company: { id: Equal(userInfo.company.id) },
         screen: { id: In(screenIds) },
-        status: In([CampaignStatus.CONFIRMED, CampaignStatus.PENDING, CampaignStatus.REJECTED])
+        status: In([CampaignStatus.CONFIRMED, CampaignStatus.PENDING])
       },
       relations: {
         screen: true
@@ -226,8 +227,9 @@ export class CampaignService {
       });
   }
 
-  async getCampaignReservations(campaignId: number, userId: number): Promise<Reservation[]> {
-    const campaign = await this.findCampaignById(campaignId, userId);
+  async getCampaignReservations(campaignId: number, userInfo: UserInfo): Promise<Reservation[]> {
+    const companyId = userInfo?.company?.id || null;
+    const campaign = await this.findCampaignById(campaignId, (companyId ? null : userInfo.userLocalId), companyId);
 
     if (!campaign) {
       throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
@@ -250,24 +252,27 @@ export class CampaignService {
 
   async findCampaignById(
     id: number,
-    userId: number,
-    relations: FindOptionsRelations<Campaign> = {}
+    userId?: number,
+    companyId?: number,
+    relations: FindOptionsRelations<Campaign> = {},
   ): Promise<Campaign> {
-    return await this.campaignRepository.findOne({
-      where: {
-        id: Equal(id),
-        user: { id: Equal(userId) }
-      },
-      relations
-    })
+    const where: FindOptionsWhere<Campaign> = {
+      id: Equal(id)
+    };
+
+    if (userId) where.user = { id: Equal(userId) };
+    if (companyId) where.company = { id: Equal(companyId) };
+
+    return await this.campaignRepository.findOne({ where, relations })
       .catch((err) => {
         console.error(err);
         return null;
       });
   }
 
-  async generateDownloadUrl(user: UserInfo, campaignId: number) {
-    const campaign = await this.findCampaignById(campaignId, user.userLocalId, { media: true });
+  async generateDownloadUrl(userInfo: UserInfo, campaignId: number) {
+    const companyId = userInfo?.company?.id || null;
+    const campaign = await this.findCampaignById(campaignId, (companyId ? null : userInfo.userLocalId), companyId, { media: true });
 
     if (!campaign) {
       throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
@@ -365,7 +370,7 @@ export class CampaignService {
   }
 
   async deleteCampaignMedia(userLocalId: number, campaignId: number) {
-    const campaign = await this.findCampaignById(campaignId, userLocalId, { media: true });
+    const campaign = await this.findCampaignById(campaignId, userLocalId, null, { media: true });
 
     if (!campaign) {
       throw new HttpException(`Campaign with id: ${campaignId} doesn't exists`, HttpStatus.BAD_REQUEST);
