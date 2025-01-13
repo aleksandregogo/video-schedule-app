@@ -5,7 +5,7 @@ import { User } from "src/Entities/user.entity";
 import { GenerateUploadUrlCommand } from "src/Storage/Command/generate-upload-url.command";
 import { v4 } from "uuid";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Equal, FindOptionsRelations, Repository } from "typeorm";
+import { Equal, FindOptionsRelations, In, Repository } from "typeorm";
 import { Campaign } from "src/Entities/campaign.entity";
 import { Media } from "src/Entities/media.entity";
 import { CreateCampaignDto } from "./Dto/create.campaign.dto";
@@ -199,6 +199,31 @@ export class CampaignService {
       console.error("Error in getAllCampaigns", err);
       return [];
     })
+  }
+
+  async getAllCampaignsToReview(userInfo: UserInfo): Promise<Campaign[]> {
+    const companyScreens = await this.screenService.getCompanyScreens(userInfo.company.id);
+
+    if (!companyScreens || !companyScreens.length) {
+      throw new HttpException(`Screens not found for company`, HttpStatus.BAD_REQUEST);
+    }
+    
+    const screenIds: number[] = companyScreens.map((screen) => screen.id);
+
+    return await this.campaignRepository.find({
+      where: {
+        company: { id: Equal(userInfo.company.id) },
+        screen: { id: In(screenIds) },
+        status: In([CampaignStatus.CONFIRMED, CampaignStatus.PENDING, CampaignStatus.REJECTED])
+      },
+      relations: {
+        screen: true
+      }
+    })
+      .catch((err) => {
+        console.error("Error in getAllCampaigns for company", err);
+        return [];
+      });
   }
 
   async getCampaignReservations(campaignId: number, userId: number): Promise<Reservation[]> {

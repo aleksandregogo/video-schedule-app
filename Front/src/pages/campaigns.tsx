@@ -1,34 +1,14 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/ui/use-toast";
-import { APIClient } from "@/services/APIClient";
-import { useParams } from "react-router-dom";
-import { ScreenView } from "./screens";
-import { Reservation, ReservationDto } from "@/components/screen/types";
+import { Reservation } from "@/components/screen/types";
 import ScreenTimeSlotsModal from "@/components/screen/modals/screen-time-slots-modal";
 import { formatDateTimeLocal } from "@/lib/utils";
 import ConfirmationModal from "@/components/ui/confirmation-modal";
 import Campaign from "@/components/campaign/campaign";
 import CampaignSubmitModal from "@/components/campaign/modals/campaign-submit-modal";
-
-export enum CampaignStatus {
-  CREATED = 'CREATED',
-  CONFIRMED = 'CONFIRMED',
-  REJECTED = 'REJECTED',
-  PENDING = 'PENDING',
-  CANCELLED = 'CANCELLED'
-}
-
-export type ReservationOwner = 'screen' | 'campaign';
-export interface CampaignView {
-  id: number;
-  createdAt: Date;
-  name: string;
-  uuid: string;
-  screen: ScreenView;
-  status: CampaignStatus;
-  reservations?: Reservation[];
-  mediaUrl?: string;
-}
+import { CampaignView } from "@/components/campaign/types";
+import { fetchReservations, ReservationDto, updateReservations } from "@/actions/reservation";
+import { deleteCampaign, deleteCampaignMedia, fetchAllCampaigns, fetchCampaignMedia, updateCampaignReviewStatus } from "@/actions/campaign";
 
 const Campaigns = () => {
   const [campaigns, setCampaigns] = useState<CampaignView[]>([]);
@@ -45,45 +25,16 @@ const Campaigns = () => {
 
   const { toast } = useToast();
 
-  const fetchCampaigns = () => {
-    APIClient.get('/campaign/all')
-      .then((response) => {
-        const campaigns = response.data.data as CampaignView[];
+  const refreshCampaigns = async () => {
+    const campaigns = await fetchAllCampaigns();
 
-        if (campaigns) {
-          campaigns.sort((a, b) => (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
-
-          const data = campaigns.map(
-            (campaign: CampaignView) =>
-              ({
-                id: campaign.id,
-                createdAt: campaign.createdAt,
-                name: campaign.name,
-                uuid: campaign.uuid,
-                status: campaign.status,
-                screen: {
-                  id: campaign.screen.id,
-                  name: campaign.screen.name,
-                  status: campaign.screen.status,
-                  lat: campaign.screen.lat,
-                  lng: campaign.screen.lng,
-                  imageDownloadUrl: campaign.screen.imageDownloadUrl,
-                  price: campaign.screen.price,
-                  companyId: campaign.screen.companyId
-                } as ScreenView
-              } as CampaignView)
-          );
-
-          setCampaigns(data);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
-  };
+    if (campaigns) {
+      setCampaigns(campaigns)
+    }
+  }
 
   useEffect(() => {
-    fetchCampaigns();
+    refreshCampaigns()
   }, []);
 
 
@@ -103,9 +54,9 @@ const Campaigns = () => {
   }
 
   const handleClickCancel = async (campaign: CampaignView) => {
-    await changeCampaignReviewStatus(campaign.id, 'cancel')
+    await updateCampaignReviewStatus(campaign.id, 'cancel')
       .then(() => {
-        fetchCampaigns();
+        refreshCampaigns();
         toast({
           title: "Campaign review canceled",
           description: `You can now modifie or delete your campaign`,
@@ -148,43 +99,15 @@ const Campaigns = () => {
     setSelectedReservations(selectedReservations);
   }
 
-  const fetchReservations = async (id: number, owner: ReservationOwner): Promise<Reservation[]> => {
-    return await APIClient.get(`/${owner}/${id}/reservations`)
-      .then((response) => {
-        const reservations = response.data.data as Reservation[];
-  
-        if (reservations?.length) return reservations;
-  
-        return [];
-      })
-      .catch((err) => {
-        console.error("Error fetching screen reservations:", err);
-        return [];
-      });
-  }
-
-  const fetchCampaignMedia = async (id: number): Promise<string | null> => {
-    return await APIClient.get(`/campaign/${id}/media/download-request`)
-      .then((response) => response.data.downloadUrl || null)
-      .catch((err) => {
-        console.error("Error fetching campaign media:", err);
-        return null;
-      });
-  }
-
-  const handleDeleteCampaignMedia = async (): Promise<string | null> => {
+  const handleDeleteCampaignMedia = async () => {
     if (!selectedCampaign.id) return;
-    return await APIClient.delete(`/campaign/media/${selectedCampaign.id}`)
+    return await deleteCampaignMedia(selectedCampaign.id)
       .then(() => {
         setSelectedCampaign({
           ...selectedCampaign,
           mediaUrl: null
         });
       })
-      .catch((err) => {
-        console.error("Error deleting campaign media:", err);
-        return null;
-      });
   }
 
   const handleEdit = async (reservations: Reservation[], name: string) => {
@@ -193,7 +116,7 @@ const Campaigns = () => {
         setSelectedCampaign(null);
         setEditModalStep(0);
         setEditModalOpen(false);
-        fetchCampaigns();
+        refreshCampaigns();
         toast({
           title: "Campaign Updated",
           description: `Campaign #${selectedCampaign.name} has been successfully updated.`,
@@ -221,36 +144,23 @@ const Campaigns = () => {
       return;
     }
 
-    return await APIClient.put(`/campaign/${selectedCampaign.id}`, {
+    return await updateReservations(selectedCampaign.id, {
       name,
       reservations: reservedTimes
-    })
-      .then((response) => {
-        const data = response.data;
-        if (data && data.id) {
-          return true;
-        } else {
-          console.error("Error creating campaign", response?.data);
-          return null;
-        }
-      })
-      .catch((err) => {
-        console.error("Error creating campaign:", err);
-        return null;
-      });
+    });
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedCampaign) {
       console.error("Campaign is empty");
       return;
     }
 
-    APIClient.delete(`/campaign/${selectedCampaign.id}`)
+    await deleteCampaign(selectedCampaign.id)
       .then(() => {
         setSelectedCampaign(null);
         setDeleteModalOpen(false);
-        fetchCampaigns();
+        refreshCampaigns();
         toast({
           title: "Campaign Deleted",
           description: `Campaign #${selectedCampaign.name} has been successfully updated.`,
@@ -269,33 +179,16 @@ const Campaigns = () => {
       });
   };
 
-  const changeCampaignReviewStatus = async (campaignId: number, action: 'submit' | 'cancel') => {
-    return await APIClient.post(`/campaign/review/${campaignId}/${action}`)
-      .then((response) => {
-        const data = response.data;
-        if (data && data.id) {
-          return true;
-        } else {
-          console.error("Error submiting campaign for review", response?.data);
-          return null;
-        }
-      })
-      .catch((err) => {
-        console.error("Error submiting campaign for review", err);
-        return null;
-      });
-  }
-
   const handleClickSubmit = async (reservations: Reservation[], name: string) => {
     const updatedReservations = await updateCampaignReservations(reservations, name);
 
     if (updatedReservations) {
-      await changeCampaignReviewStatus(selectedCampaign.id, 'submit')
+      await updateCampaignReviewStatus(selectedCampaign.id, 'submit')
         .then(() => {
           setSelectedCampaign(null);
           setSubmitModalOpen(false);
           setSubmitModalStep(0);
-          fetchCampaigns();
+          refreshCampaigns();
           toast({
             title: "Campaign review requested",
             description: `Review requested for Campaign #${selectedCampaign.name}. Wait for moderator to approve. you'll be notified`,

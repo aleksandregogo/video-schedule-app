@@ -73,7 +73,6 @@ export class CampaignController {
   }
 
   @ApiOperation({ summary: 'Delete campaign' })
-  @UseGuards(AuthGuard('cookie'))
   @Delete(':id')
   @HttpCode(204)
   async deleteCampaign(
@@ -93,6 +92,30 @@ export class CampaignController {
     const userInfo = req.user as UserInfo;
 
     const campaigns = await this.campaignService.getAllCampaigns(userInfo.user);
+
+    if (!campaigns) throw new HttpException({
+      message: 'Error on selecting all campaigns',
+      errorCode: 0,
+    }, HttpStatus.BAD_REQUEST)
+
+    return new SuccessResponseObjectDto({
+      data: new CampaignPresentation().presentList(campaigns)
+    });
+  }
+
+  @ApiOperation({summary: 'Get campaigns for review'})
+  @Get('/all-company')
+  async getCompanyScreens(@Req() req: Request) {
+    const userInfo = req.user as UserInfo;
+
+    if (!userInfo.company?.id) {
+      throw new HttpException({
+        message: 'Access denied.',
+        errorCode: 0,
+      }, HttpStatus.UNAUTHORIZED)
+    }
+
+    const campaigns = await this.campaignService.getAllCampaignsToReview(userInfo);
 
     if (!campaigns) throw new HttpException({
       message: 'Error on selecting all campaigns',
@@ -156,7 +179,6 @@ export class CampaignController {
   }
 
   @ApiOperation({ summary: 'Delete campaign media' })
-  @UseGuards(AuthGuard('cookie'))
   @Delete('media/:id')
   @HttpCode(204)
   async deleteCampaignMedia(

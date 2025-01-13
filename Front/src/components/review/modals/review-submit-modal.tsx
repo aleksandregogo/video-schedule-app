@@ -3,30 +3,26 @@ import { useEffect, useRef, useState } from "react";
 import Schedule from "@/components/schedule/schedule";
 import { Button } from "@/components/ui/button";
 import { Label } from "@radix-ui/react-label";
-import CampaignSubmitModalHeader from "./campaign-submit-modal-header";
+import ReviewSubmitModalHeader from "./review-submit-modal-header";
 import { Reservation } from "@/components/screen/types";
-import FileUploader from "@/components/fileUploader";
-import { Clapperboard, Trash2 } from "lucide-react";
-import { CampaignStatus, CampaignView } from "../types";
+import { CampaignView } from "@/components/campaign/types";
 
 type Props = {
   campaign: CampaignView;
   step: number;
   onStepChange: (step: number) => void;
   onClose: () => void;
-  onSubmit: (reservations: Reservation[], name: string) => void;
-  onEditTime: () => void;
-  onMediaDelete: () => void;
+  onConfirm: () => void;
+  onReject: () => void;
 };
 
-const CampaignSubmitModal = ({
+const ReviewSubmitModal = ({
   campaign,
   step,
   onStepChange,
   onClose,
-  onSubmit,
-  onEditTime,
-  onMediaDelete
+  onConfirm,
+  onReject
 }: Props) => {
   const [changedCampaignTitle, setChangedCampaignTitle] = useState<string>(campaign.name);
   const [reservations, setReservations] = useState<Reservation[]>(campaign?.reservations || []);
@@ -36,8 +32,6 @@ const CampaignSubmitModal = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoDuration, setVideoDuration] = useState<number>(0);
-
-  const canEdit = campaign?.status !== CampaignStatus.PENDING;
 
   useEffect(() => {
     if (campaign) {
@@ -70,16 +64,16 @@ const CampaignSubmitModal = ({
     <Dialog open={true} onClose={onClose}>
       <DialogTitle hidden></DialogTitle>
       <DialogContent className="w-full max-w-[90vw] h-[80vh] p-0 rounded-lg shadow-lg bg-white">
-        <CampaignSubmitModalHeader
+        <ReviewSubmitModalHeader
           name={campaign.name}
           step={step}
           setStep={onStepChange}
-          showNextStep={!canEdit}
+          showNextStep={true}
         />
         {step === 0 ? (
           <div className="relative h-80 w-50 m-4">
             <h1 className="text-2xl font-bold p-2 mb-2">Upload media</h1>
-              {mediaUrl ? 
+              {mediaUrl &&
                 <>
                   <video
                     ref={videoRef}
@@ -92,17 +86,10 @@ const CampaignSubmitModal = ({
                     controls
                     className="bg-black w-full h-full"
                   />
-                  {canEdit && <Button
-                    variant="destructive"
-                    onClick={onMediaDelete}
-                    className="my-2"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </Button>}
 
-                  {videoDuration > 0 && canEdit && <>
+                  {videoDuration > 0 && <>
                     <p>
-                      Your media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
+                      Media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
                     </p>
                     <p>Selected time slots will be corrected by this duration.</p>
                     <div>
@@ -112,20 +99,7 @@ const CampaignSubmitModal = ({
                       </Button>
                     </div>
                   </>}
-                </> :
-                <div className="relative h-80 w-50 bg-gray-200 rounded-lg overflow-hidden">
-                  <button className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white">
-                    <FileUploader
-                      ownerId={campaign.id}
-                      uploadEndpoint="/campaign/media/upload-request"
-                      completeEndpoint="/campaign/media/upload-complete"
-                      onComplete={(mediaDownloadUrl) => setMediaUrl(mediaDownloadUrl)}
-                    >
-                      <Clapperboard className="w-6 h-6 mr-2" />
-                      Upload media
-                    </FileUploader>
-                  </button>
-                </div>
+                </>
               }
           </div>
         ) : (
@@ -135,27 +109,26 @@ const CampaignSubmitModal = ({
               setReservations={(reservations) => setReservations(reservations)}
               title={changedCampaignTitle}
               setTitle={(title) => setChangedCampaignTitle(title)}
-              onEditTime={canEdit ? onEditTime : null}
-              canEdit={canEdit}
-              maxHeight={canEdit ? "h-[30vh]" : "h-[50vh]"}
+              onEditTime={null}
+              canEdit={false}
+              maxHeight="h-[50vh]"
             />
-            {canEdit && <div className="m-4">
+            <div className="m-4">
               <p>
                 Your media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
-              </p>
-              <p>
-                Time slots is already corrected by video duration.
               </p>
               <p className="text-sm font-medium text-gray-700">
                 Total price is: <span className="text-lg font-semibold">{totalPrice}$</span>
               </p>
               <div>
-                <Label htmlFor="text-input"> You can now request review</Label>
-                <Button variant="default" className="ml-2" onClick={() => onSubmit(reservations, changedCampaignTitle)}>
-                  Request review
+                <Button variant="destructive" className="ml-2" onClick={onReject}>
+                  Reject
+                </Button>
+                <Button variant="destructive" className="ml-2" onClick={onConfirm}>
+                  Confirm
                 </Button>
               </div>
-            </div>}
+            </div>
           </>
         )}
       </DialogContent>
@@ -163,4 +136,4 @@ const CampaignSubmitModal = ({
   );
 };
 
-export default CampaignSubmitModal;
+export default ReviewSubmitModal;

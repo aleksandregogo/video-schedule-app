@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { Image, Camera, Trash2, CalendarPlus } from "lucide-react";
-import FileUploader from "../file-uploader";
-import { ScreenView } from "@/pages/screens";
+import FileUploader from "../fileUploader";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/authProvider";
-import { ScreenStatus } from "@/types/screen.enum";
 import ConfirmationModal from "@/components/ui/confirmation-modal"; 
 import ScreenTimeSlotsModal from "./modals/screen-time-slots-modal";
 import "@/styles/calendar.css";
-import { Reservation } from "./types";
-import { APIClient } from "@/services/APIClient";
+import { Reservation, ScreenStatus, ScreenView } from "./types";
 import { formatDateTimeLocal } from "@/lib/utils";
+import { createCampaign } from "@/actions/campaign";
+import { fetchReservations } from "@/actions/reservation";
 
 type ScreensGalleryViewProps = {
   screens: ScreenView[];
@@ -38,7 +37,7 @@ const ScreensGalleryView = ({
   const [selectedScreenReservations, setSelectedScreenReservations] = useState<Reservation[]>([]);
 
   const handleBook = async (screen: ScreenView) => {
-    await fetchReservations(screen.id);
+    await fetchScreenReservations(screen.id);
     setSelectedScreen(screen);
     setScreenModalOpen(true);
   };
@@ -56,34 +55,28 @@ const ScreensGalleryView = ({
     setSelectedScreen(null);
   };
 
-  const fetchReservations = async (screenId: number) => {
-    await APIClient.get(`/screen/${screenId}/reservations`)
-      .then((response) => {
-        const reservations = response.data.data as Reservation[];
+  const fetchScreenReservations = async (screenId: number) => {
+    const reservations = await fetchReservations(screenId, 'screen')
 
-        if (reservations) {  
-          const data = reservations.map(
-            (reservation: Reservation) =>
-              ({
-                id: reservation.id,
-                title: reservation.title,
-                status: reservation.status,
-                start: formatDateTimeLocal(reservation.start),
-                end: formatDateTimeLocal(reservation.end),
-                backgroundColor: "#f87171",
-                canEdit: false
-              } as Reservation)
-          );
+    if (reservations) {
+      const data = reservations.map(
+        (reservation: Reservation) =>
+          ({
+            id: reservation.id,
+            title: reservation.title,
+            status: reservation.status,
+            start: formatDateTimeLocal(reservation.start),
+            end: formatDateTimeLocal(reservation.end),
+            backgroundColor: "#f87171",
+            canEdit: false
+          } as Reservation)
+      );
 
-          setSelectedScreenReservations(data);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
+      setSelectedScreenReservations(data);
+    }
   }
 
-  const handleCreateCampaign = (reservations: Reservation[], name: string) => {
+  const handleCreateCampaign = async (reservations: Reservation[], name: string) => {
     const reservedTimes = [];
 
     reservations.forEach((reservation) => {
@@ -101,22 +94,13 @@ const ScreensGalleryView = ({
       return;
     }
 
-    APIClient.post(`/campaign`, {
+    const created = await createCampaign({
       name,
       screenId: selectedScreen.id,
       reservations: reservedTimes
-    })
-      .then((response) => {
-        const data = response.data;
-        if (data && data.id) {
-          setScreenModalStep(2);
-        } else {
-          console.error("Error creating campaign", response?.data);
-        }
-      })
-      .catch((err) => {
-        console.error("Error creating campaign:", err);
-      });
+    });
+
+    if (created) setScreenModalStep(2);
   };
 
   return (
@@ -224,7 +208,7 @@ const ScreensGalleryView = ({
         step={screenModalStep}
         onStepChange={setScreenModalStep}
         onClose={() => setScreenModalOpen(false)}
-        onReloadReservations={() => fetchReservations(selectedScreen.id)}
+        onReloadReservations={() => fetchScreenReservations(selectedScreen.id)}
         onReservationsSubmit={handleCreateCampaign}
       />}
 

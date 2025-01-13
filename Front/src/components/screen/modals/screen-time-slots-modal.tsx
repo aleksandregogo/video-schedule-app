@@ -4,7 +4,6 @@ import ScreenSlotReservationModal from "@/components/screen/modals/screen-slot-r
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/ui/use-toast";
 import { Reservation, ReservationStatus, CalendarEvent } from "../types";
-import { ScreenView } from "@/pages/screens";
 import Schedule from "@/components/schedule/schedule";
 import { Button } from "@/components/ui/button";
 import ScreenModalHeader from "./screen-modal-header";

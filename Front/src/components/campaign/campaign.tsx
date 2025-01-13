@@ -1,6 +1,6 @@
 import { Trash2, CalendarArrowUp } from "lucide-react";
 import { Button } from "../ui/button";
-import { CampaignStatus, CampaignView } from "@/pages/campaigns";
+import { CampaignStatus, CampaignView } from "./types";
 
 const Campaign = ({
   campaign,
