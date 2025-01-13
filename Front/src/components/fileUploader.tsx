@@ -1,5 +1,6 @@
 import { APIClient } from "@/services/APIClient";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import { Progress } from "./ui/progress";
 
 type FileUploaderProps = {
   ownerId: number;
@@ -16,6 +17,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   onComplete,
   children,
 }) => {
+  const [progress, setProgress] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const allowedMimeTypes = [
@@ -65,7 +67,8 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           },
           withCredentials: false,
           onUploadProgress: (progressEvent) => {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const newProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            if (newProgress) setProgress(newProgress)
           },
         });
 
@@ -123,6 +126,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         onChange={handleFileChange}
       />
       {childrenWithOnClick}
+      {progress > 0 && (
+        <Progress
+          value={progress}
+          className="absolute bottom-0 left-0 w-full h-2 bg-gray-200"
+        />
+      )}
     </div>
   );
 };
