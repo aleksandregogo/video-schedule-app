@@ -84,9 +84,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           throw new Error("Failed to complete file upload");
         }
 
-        const imageDownloadUrl = done.data?.imageDownloadUrl;
+        const url = done.data?.imageDownloadUrl || done.data?.downloadUrl;
 
-        onComplete && imageDownloadUrl && onComplete(imageDownloadUrl);
+        onComplete && url && onComplete(url);
       }
     } catch (error) {
       console.error(`Upload failed: ${error.message}`);

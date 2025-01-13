@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Image, Camera, Trash2, CalendarPlus } from "lucide-react";
-import FileUploader from "../file-uploader";
-import { ScreenView } from "@/pages/screens";
+import FileUploader from "../fileUploader";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/authProvider";
-import { ScreenStatus } from "@/types/screen.enum";
 import ConfirmationModal from "@/components/ui/confirmation-modal"; 
 import ScreenTimeSlotsModal from "./modals/screen-time-slots-modal";
 import "@/styles/calendar.css";
+import { Reservation, ScreenStatus, ScreenView } from "./types";
+import { formatDateTimeLocal } from "@/lib/utils";
+import { createCampaign } from "@/actions/campaign";
+import { fetchReservations } from "@/actions/reservation";
 
 type ScreensGalleryViewProps = {
   screens: ScreenView[];
@@ -29,10 +31,13 @@ const ScreensGalleryView = ({
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [screenModalOpen, setScreenModalOpen] = useState(false);
+  const [screenModalStep, setScreenModalStep] = useState(0);
 
   const [selectedScreen, setSelectedScreen] = useState<ScreenView | null>(null);
+  const [selectedScreenReservations, setSelectedScreenReservations] = useState<Reservation[]>([]);
 
-  const handleBook = (screen: ScreenView) => {
+  const handleBook = async (screen: ScreenView) => {
+    await fetchScreenReservations(screen.id);
     setSelectedScreen(screen);
     setScreenModalOpen(true);
   };
@@ -48,6 +53,54 @@ const ScreensGalleryView = ({
     }
     setDeleteModalOpen(false);
     setSelectedScreen(null);
+  };
+
+  const fetchScreenReservations = async (screenId: number) => {
+    const reservations = await fetchReservations(screenId, 'screen')
+
+    if (reservations) {
+      const data = reservations.map(
+        (reservation: Reservation) =>
+          ({
+            id: reservation.id,
+            title: reservation.title,
+            status: reservation.status,
+            start: formatDateTimeLocal(reservation.start),
+            end: formatDateTimeLocal(reservation.end),
+            backgroundColor: "#f87171",
+            canEdit: false
+          } as Reservation)
+      );
+
+      setSelectedScreenReservations(data);
+    }
+  }
+
+  const handleCreateCampaign = async (reservations: Reservation[], name: string) => {
+    const reservedTimes = [];
+
+    reservations.forEach((reservation) => {
+      if (reservation.canEdit) {
+        reservedTimes.push({
+          name: reservation.title,
+          startTime: new Date(reservation.start),
+          endTime: new Date(reservation.end),
+        });
+      }
+    })
+
+    if (!reservedTimes.length) {
+      console.error("Reserved times is empty");
+      return;
+    }
+
+    const created = await createCampaign({
+      name,
+      screenId: selectedScreen.id,
+      reservations: reservedTimes
+    });
+
+    if (created) setScreenModalStep(2);
   };
 
   return (
@@ -135,29 +188,33 @@ const ScreensGalleryView = ({
                 </Button>}
               </div>
             ) : (
-              user && (<Button
-                  onClick={() => handleBook(screen)}
-                  className="flex items-center gap-2"
+              user && <Button
+                onClick={() => handleBook(screen)}
+                className="flex items-center gap-2"
               >
                 <CalendarPlus className="w-5 h-5" />
                 Book
-              </Button>)
+              </Button>
             )}
           </div>
         ))}
       </div>
 
       {/* Screen schedule modal */}
-      <ScreenTimeSlotsModal
-        open={screenModalOpen}
-        setOpen={setScreenModalOpen}
-        screen={selectedScreen}
-      />
+      {screenModalOpen && <ScreenTimeSlotsModal
+        title={selectedScreen?.name}
+        price={selectedScreen?.price}
+        reservedSlots={selectedScreenReservations}
+        step={screenModalStep}
+        onStepChange={setScreenModalStep}
+        onClose={() => setScreenModalOpen(false)}
+        onReloadReservations={() => fetchScreenReservations(selectedScreen.id)}
+        onReservationsSubmit={handleCreateCampaign}
+      />}
 
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
         <ConfirmationModal
-          isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onConfirm={confirmDelete}
           title="Delete Screen"

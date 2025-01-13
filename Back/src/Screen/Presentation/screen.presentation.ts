@@ -1,5 +1,3 @@
-import { Reservation } from "src/Entities/reservation.entity";
-import { ReservationViewDto } from "./view/reservations.view.dto";
 import { ScreenViewDto } from "./view/screen.view.dto";
 import { Screen } from "src/Entities/screen.entity";
 
@@ -28,27 +26,5 @@ export class ScreenPresentation {
         }
 
         return views;
-    }
-
-    public presentScreenReservations(reservations: Reservation[]) {
-        const views: ReservationViewDto[] = [];
-
-        for (const reservation of reservations) {
-            views.push(this.presentReservation(reservation))
-        }
-
-        return views;
-    }
-
-    public presentReservation(reservation: Reservation) {
-        const view = new ReservationViewDto();
-
-        view.id = reservation.id;
-        view.title = reservation.name;
-        view.start = reservation.startTime;
-        view.end = reservation.endTime;
-        view.status = reservation.status;
-
-        return view;
     }
 }

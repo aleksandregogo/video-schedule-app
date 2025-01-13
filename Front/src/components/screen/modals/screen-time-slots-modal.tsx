@@ -1,64 +1,67 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import FullCalendarWrapper from "@/components/calendar/full-calendar-wrapper";
 import ScreenSlotReservationModal from "@/components/screen/modals/screen-slot-reservation-modal";
 import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/ui/use-toast"; // Import ShadCN toast hook
-import { Reservation, ReservationStatus, CalendarEvent } from "./types";
-import { ScreenView } from "@/pages/screens";
-import { APIClient } from "@/services/APIClient";
-import { formatDateTimeLocal, parseDateTimeLocal } from "@/lib/utils";
+import { useToast } from "@/hooks/ui/use-toast";
+import { Reservation, ReservationStatus, CalendarEvent } from "../types";
 import Schedule from "@/components/schedule/schedule";
 import { Button } from "@/components/ui/button";
 import ScreenModalHeader from "./screen-modal-header";
+import { Label } from "@radix-ui/react-label";
 
 type Props = {
-  screen: ScreenView;
-  open: boolean;
-  setOpen: (value: boolean) => void;
+  price: number;
+  title: string;
+  reservedSlots: Reservation[];
+  step: number;
+  isEditMode?: boolean;
+  onStepChange: (step: number) => void;
+  onClose: () => void;
+  onReloadReservations: () => void;
+  onReservationsSubmit: (reservations: Reservation[], name: string) => void;
 };
 
-const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
-  const [zoomIndex, setZoomIndex] = useState(1);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [reservationModalOpen, setReservationModalOpen] = useState(false);
-
-  const [viewStep, setViewStep] = useState<number>(0);
-  const [campaignTitle, setCampaignTitle] = useState<string>("");
-  const [campaignId, setCampaignId] = useState<string>();
-
+const ScreenTimeSlotsModal = ({
+  title,
+  price = 0,
+  reservedSlots,
+  step,
+  isEditMode = false,
+  onStepChange,
+  onClose,
+  onReloadReservations,
+  onReservationsSubmit
+}: Props) => {
   const { toast } = useToast();
 
-  const fetchScreens = async (screenId: number) => {
-    await APIClient.get(`/screen/${screenId}/reservations`)
-      .then((response) => {
-        const reservations = response.data.data as Reservation[];
-
-        if (reservations) {  
-          const data = reservations.map(
-            (reservation: Reservation) =>
-              ({
-                id: reservation.id,
-                title: reservation.title,
-                status: reservation.status,
-                start: formatDateTimeLocal(reservation.start),
-                end: formatDateTimeLocal(reservation.end),
-                backgroundColor: "#f87171",
-                canEdit: false
-              } as Reservation)
-          );
-
-          setReservations(data);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
-  }
+  const [zoomIndex, setZoomIndex] = useState(2);
+  const [reservations, setReservations] = useState<Reservation[]>(reservedSlots || []);
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [reservationModalOpen, setReservationModalOpen] = useState(false);
+  const [changedCampaignTitle, setChangedCampaignTitle] = useState<string>(isEditMode && title ? title : '');
+  const [totalPrice, setTotalPrice] = useState<number>(0);
 
   useEffect(() => {
-    if (screen && screen.id) fetchScreens(screen.id)
-  }, [screen]);
+    if (reservations && price) {
+      const newReservations = reservations.filter((res) => res.canEdit);
+
+      if (newReservations?.length) {
+        let fullCalculatedPrice = 0;
+        
+        newReservations.forEach((reservation) => {
+          const start = new Date(reservation.start);
+          const end = new Date(reservation.end);
+          const calculatedDuration = Math.round((end.getTime() - start.getTime()) / 1000);
+
+          fullCalculatedPrice += calculatedDuration * price;
+        });
+
+        if (fullCalculatedPrice) setTotalPrice(fullCalculatedPrice);
+      } else {
+        setTotalPrice(0)
+      }
+    }
+  }, [reservations, price])
 
   const handleViewChange = (index: number) => setZoomIndex(index);
 
@@ -116,56 +119,22 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
     setReservationModalOpen(false);
   };
 
-  const handleCreateCampaign = () => {
-    const reservedTimes = [];
-
-    reservations.forEach((reservation) => {
-      if (reservation.canEdit) {
-        reservedTimes.push({
-          name: reservation.title,
-          startTime: new Date(reservation.start),
-          endTime: new Date(reservation.end),
-        });
-      }
-    })
-
-    if (!reservedTimes.length) {
-      console.error("Reserved times is empty");
-      return;
-    }
-
-    APIClient.post(`/schedule/campaign`, {
-      name: campaignTitle,
-      screenId: screen.id,
-      reservations: reservedTimes
-    })
-      .then((response) => {
-        const data = response.data;
-        if (data && data.id) {
-          setCampaignId(data.id);
-          setViewStep(2);
-        } else {
-          console.error("Error creating campaign", response?.data);
-        }
-      })
-      .catch((err) => {
-        console.error("Error creating campaign:", err);
-      });
-  };
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={true} onClose={onClose}>
       <DialogTitle hidden></DialogTitle>
       <DialogContent className="w-full max-w-[90vw] h-[80vh] p-0 rounded-lg shadow-lg bg-white">
-        {viewStep < 2 &&
+        {step < 2 &&
           <ScreenModalHeader
-            name={screen?.name}
-            step={viewStep}
-            setStep={setViewStep}
+            name={title}
+            step={step}
+            setStep={onStepChange}
             reservationAdded={reservations.some((s) => s.canEdit)}
+            handleCreate={() => onReservationsSubmit(reservations, changedCampaignTitle)}
+            disableCreate={changedCampaignTitle === '' || !reservations.some((s) => s.confirmed)}
+            isEditMode={isEditMode}
           />
         }
-        {viewStep === 0 ? (
+        {step === 0 ? (
           <FullCalendarWrapper
             reservations={reservations}
             zoomIndex={zoomIndex}
@@ -176,36 +145,58 @@ const ScreenTimeSlotsModal = ({ screen, open, setOpen }: Props) => {
               setReservationModalOpen(true);
             }}
           />
-        ) : viewStep === 1 ? (
+        ) : step === 1 ? (
           <Schedule
             selectedReservations={reservations}
             setReservations={(reservations) => setReservations(reservations)}
-            title={campaignTitle}
-            setTitle={(title) => setCampaignTitle(title)}
-            handleCreate={handleCreateCampaign}
+            title={changedCampaignTitle}
+            setTitle={(title) => setChangedCampaignTitle(title)}
+            maxHeight="h-[45vh]"
           />
         ) : (
           <div className="p-6 flex flex-col items-center justify-center space-y-6">
             <h2 className="text-3xl font-semibold text-green-600">Campaign Created Successfully!</h2>
             <p className="text-gray-700 text-center">
-              Your campaign "<strong>{campaignTitle}</strong>" has been created successfully.
+              Your campaign "<strong>{changedCampaignTitle}</strong>" has been created successfully.
             </p>
             <div className="flex space-x-4">
               <Button onClick={async () => {
-                await fetchScreens(screen.id);
-                setViewStep(0);
-                setCampaignTitle('');
+                onReloadReservations();
+                onStepChange(0);
+                setChangedCampaignTitle('');
               }} variant="outline">
                 Back
               </Button>
               <Button
-                onClick={() => window.location.href = `/campaigns${campaignId && `/${campaignId}`}`}
+                onClick={() => window.location.href = '/campaigns'}
               >
                 Go to Campaign
               </Button>
             </div>
           </div>
         )}
+        {step < 2 && <div className="flex justify-between items-center p-2">
+          {/* Duration Input */}
+          <div className="flex items-center space-x-4">
+            <Label className="text-sm font-medium">
+              Prices is calculated for <b>1 minute</b> video. Later it will be recalculated by video duration that you'll upload.
+            </Label>
+            {/* <Label className="w-full text-sm font-medium">Media duration (seconds):</Label> */}
+            {/* <Input
+              type="number"
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className="mt-1"
+            /> */}
+          </div>
+
+          {/* Price Display */}
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-700">
+              Approximately Price will be: <span className="text-lg font-semibold">{totalPrice}$</span>
+            </p>
+          </div>
+        </div>}
       </DialogContent>
 
       {/* Reservation Modal */}

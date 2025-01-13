@@ -1,7 +1,7 @@
 import { Entity, Column, JoinColumn, ManyToOne, RelationId, CreateDateColumn } from 'typeorm';
 import { Defentity } from './defentity.entity';
 import { Screen } from './screen.entity';
-import { ReservationStatus } from 'src/Screen/Enum/reservation.status.enum';
+import { ReservationStatus } from 'src/Reservations/Enum/reservation.status.enum';
 import { Campaign } from './campaign.entity';
 
 @Entity('reservation')
@@ -25,7 +25,7 @@ export class Reservation extends Defentity  {
   @RelationId((reservation: Reservation) => reservation.screen)
   screenId: number;
 
-  @ManyToOne(() => Campaign, (campaign) => campaign.id)
+  @ManyToOne(() => Campaign, (campaign) => campaign.id, { onDelete: 'CASCADE' })
   @JoinColumn()
   campaign: Campaign;
 

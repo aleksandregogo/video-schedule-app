@@ -1,21 +1,11 @@
 import { useEffect, useState } from "react";
-import { APIClient } from "@/services/APIClient";
 import { MapPin, GalleryHorizontal, Plus } from "lucide-react";
 import ScreensGalleryView from "@/components/screen/screens-gallery-view";
 import ScreensMapView from "@/components/screen/screens-map-view";
 import ScreenFormModal from "@/components/screen/modals/screen-form-modal";
 import { useAuth } from "@/contexts/authProvider";
-import { ScreenStatus } from "@/types/screen.enum";
-export interface ScreenView {
-  id: number;
-  name: string;
-  status: ScreenStatus;
-  lat: number;
-  lng: number;
-  imageDownloadUrl?: string;
-  price: number;
-  companyId: number;
-}
+import { ScreenView, ScreenStatus } from "@/components/screen/types";
+import { changeScreenStatus, createScreen, deleteScreen, deleteScreenImage, fetchScreens } from "@/actions/screen";
 
 const Screens = () => {
   const { isCompany } = useAuth();
@@ -25,58 +15,33 @@ const Screens = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [defaultScreenValues, setDefaultScreenValues] = useState<Partial<ScreenView> | null>(null);
 
-  const fetchScreens = () => {
-    const endpoint = isCompany ? `/screen/all-company` : '/screen/all'
+  const refreshScreens = async () => {
+    const screens = await fetchScreens(isCompany);
 
-    APIClient.get(endpoint)
-      .then((response) => {
-        const screens = response.data.data as ScreenView[];
-
-        if (screens) {
-          screens.sort((a, b) => a.id - b.id);
-
-          const data = screens.map(
-            (screen: ScreenView) =>
-              ({
-                id: screen.id,
-                name: screen.name,
-                status: screen.status,
-                lat: screen.lat,
-                lng: screen.lng,
-                imageDownloadUrl: screen.imageDownloadUrl,
-                price: screen.price,
-                companyId: screen.companyId
-              } as ScreenView)
-          );
-
-          setScreens(data);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
+    if (screens) {
+      setScreens(screens);
+    }
   };
 
   useEffect(() => {
-    fetchScreens();
+    refreshScreens();
   }, []);
 
-  const handleAddScreen = (newScreen: ScreenView) => {
-    APIClient.post("/screen/create", {
+  const handleAddScreen = async (newScreen: ScreenView) => {
+    const created = await createScreen({
       name: newScreen.name,
       lat: Number(newScreen.lat),
       lng: Number(newScreen.lng),
       price: Number(newScreen.price),
       status: newScreen.status
-    })
-      .then(() => fetchScreens())
-      .catch((err) => {
-        console.error("Error creating screen:", err);
-      })
-      .finally(() => {
-        setIsModalOpen(false);
-        setDefaultScreenValues(null);
-      })
+    });
+
+    if (created) {
+      await refreshScreens();
+
+      setIsModalOpen(false);
+      setDefaultScreenValues(null);
+    }
   };
 
   const handleMapClick = (lat: number, lng: number) => {
@@ -92,30 +57,22 @@ const Screens = () => {
     );
   }
 
-  const handleToggleStatus = (screenId: number, newStatus: ScreenStatus) => {
-    APIClient.put(`/screen/${screenId}/status`, {
-      status: newStatus
-    })
-      .then(() => fetchScreens())
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
+  const handleToggleStatus = async (screenId: number, newStatus: ScreenStatus) => {
+    const statusChanged = await changeScreenStatus(screenId, newStatus);
+
+    if (statusChanged) await refreshScreens();
   };
   
-  const handleDelete = (screenId: number) => {
-    APIClient.delete(`/screen/${screenId}`)
-      .then(() => fetchScreens())
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
+  const handleDelete = async (screenId: number) => {
+    const screenDeleted = await deleteScreen(screenId);
+
+    if (screenDeleted) await refreshScreens()
   };
 
-  const handleDeleteImage = (screenId: number) => {
-    APIClient.delete(`/screen/media/${screenId}`)
-      .then(() => fetchScreens())
-      .catch((err) => {
-        console.error("Error fetching screens:", err);
-      });
+  const handleDeleteImage = async (screenId: number) => {
+    const imageDeleted = await deleteScreenImage(screenId);
+
+    if (imageDeleted) await refreshScreens()
   };
 
   return (

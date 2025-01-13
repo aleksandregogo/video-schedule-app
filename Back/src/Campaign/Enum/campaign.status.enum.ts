@@ -1,0 +1,8 @@
+export enum CampaignStatus {
+  CREATED = 'CREATED',
+  CONFIRMED = 'CONFIRMED',
+  REJECTED = 'REJECTED',
+  PENDING = 'PENDING',
+  CANCELLED = 'CANCELLED'
+}
+  

@@ -8,11 +8,11 @@ export function cn(...inputs: ClassValue[]) {
 
 export const formatDateTimeLocal = (dateString: string): string => {
   const date = parseISO(dateString);
-  return format(date, "yyyy-MM-dd'T'HH:mm");
+  return format(date, "yyyy-MM-dd'T'HH:mm:ss");
 };
 
 export const parseDateTimeLocal = (localDateString: string): string => {
-  const date = parse(localDateString, "yyyy-MM-dd'T'HH:mm", new Date());
+  const date = parse(localDateString, "yyyy-MM-dd'T'HH:mm:ss", new Date());
   return date.toISOString();
 };
 

@@ -9,8 +9,8 @@ import { UserModule } from './User/user.module';
 import { AuthModule } from './Auth/auth.module';
 import { AppService } from './app.service';
 import { StorageModule } from './Storage/storage.module';
-import { ScheduleModule } from './Schedule/schedule.module';
 import { ScreenModule } from './Screen/screen.module';
+import { CampaignModule } from './Campaign/campaign.module';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { ScreenModule } from './Screen/screen.module';
     ConfigModule.forRoot(),
     UserModule,
     AuthModule,
-    ScheduleModule,
+    CampaignModule,
     StorageModule,
     ScreenModule
   ],

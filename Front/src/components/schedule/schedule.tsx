@@ -1,22 +1,27 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { Reservation } from "../screen/modals/types";
+import { Reservation } from "../screen/types";
 import { Button } from "../ui/button";
-import { formatDateTimeLocal } from "@/lib/utils";
+import { Input } from "../ui/input";
+import ReservationCard from "./reservationCard";
 
 type Props = {
   selectedReservations: Reservation[];
   title: string;
+  maxHeight: string;
+  canEdit?: boolean;
   setTitle: (title: string) => void;
   setReservations: (reservations: Reservation[]) => void;
-  handleCreate: () => void;
+  onEditTime?: () => void;
 };
 
 const Schedule = ({
   selectedReservations,
   title,
+  maxHeight = 'h-[45vh]',
+  canEdit = true,
   setTitle,
   setReservations,
-  handleCreate,
+  onEditTime
 }: Props) => {
   const allConfirmed = selectedReservations.every((s) => s.confirmed);
 
@@ -32,25 +37,38 @@ const Schedule = ({
   return (
     <div className="p-6 space-y-4 mt-4">
       {/* Title Input */}
+      {onEditTime && <Button
+        onClick={onEditTime}
+        // className="m-4"
+      >
+        Edit on time table
+      </Button>}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Campaign Title
-        </label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter a title"
-          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-        />
+        {canEdit ?
+          <>
+            <label className="block text-sm font-medium text-gray-700">
+              Campaign Title:
+            </label>
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter a title"
+              className="mt-1"
+            />
+          </> :
+          <label className="block text-sm font-medium text-gray-700">
+            Campaign Title: <strong>{title}</strong>
+          </label>
+        }
       </div>
 
       {/* Slots Summary */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Confirm Reservations</h2>
+          <h2 className="text-lg font-semibold">Reservations</h2>
           {/* Checkbox to Confirm/Deny All */}
-          <div
+          {canEdit && <div
             className="flex items-center space-x-2 p-4 cursor-pointer"
             onClick={() => handleToggleAll(!allConfirmed)}
           >
@@ -58,27 +76,18 @@ const Schedule = ({
             <Checkbox
               checked={allConfirmed}
             />
-          </div>
+          </div>}
         </div>
 
-        {selectedReservations.map(
-          (slot, index) =>
-            slot.canEdit && (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 bg-gray-100 rounded-md shadow-sm"
-              >
-                <div>
-                  <p>
-                    <strong>Start:</strong> {formatDateTimeLocal(slot.start)}
-                  </p>
-                  <p>
-                    <strong>End:</strong> {formatDateTimeLocal(slot.end)}
-                  </p>
-                </div>
-                <Checkbox
-                  checked={slot.confirmed}
-                  onCheckedChange={(checked) =>
+        <div className={`${maxHeight} overflow-auto`}>
+          {selectedReservations.map(
+            (slot, index) =>
+              slot.canEdit && (
+                <ReservationCard
+                  key={index}
+                  reservation={slot}
+                  handleCheckboxChange={
+                    canEdit ? (checked) => {
                     setReservations(
                       selectedReservations.map((s) =>
                         s.id === slot.id
@@ -89,22 +98,11 @@ const Schedule = ({
                           : s
                       )
                     )
-                  }
+                  } : null}
                 />
-              </div>
-            )
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-end space-x-4">
-        <Button
-          onClick={handleCreate}
-          disabled={title === '' || !selectedReservations.some((s) => s.confirmed)}
-          className="bg-blue-500 text-white hover:bg-blue-600"
-        >
-          Create
-        </Button>
+              )
+          )}
+        </div>
       </div>
     </div>
   );

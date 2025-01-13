@@ -1,5 +1,5 @@
-import { ScreenStatus } from "@/types/screen.enum";
 import React, { useState } from "react";
+import { ScreenStatus } from "../types";
 
 export interface ScreenCreateDto {
   name: string;

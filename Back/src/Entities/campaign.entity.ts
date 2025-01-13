@@ -1,9 +1,11 @@
-import { Entity, Column, JoinColumn, ManyToOne, RelationId } from 'typeorm';
+import { Entity, Column, JoinColumn, ManyToOne, RelationId, OneToMany, OneToOne } from 'typeorm';
 import { Defentity } from './defentity.entity';
 import { Screen } from './screen.entity';
 import { Company } from './company.entity';
 import { User } from './user.entity';
 import { Media } from './media.entity';
+import { CampaignStatus } from 'src/Campaign/Enum/campaign.status.enum';
+import { Reservation } from './reservation.entity';
 
 @Entity('campaign')
 export class Campaign extends Defentity  {
@@ -34,10 +36,16 @@ export class Campaign extends Defentity  {
   @RelationId((campaign: Campaign) => campaign.user)
   userId: number;
 
-  @ManyToOne(() => Campaign, (media) => media.id)
+  @OneToOne(() => Media, (media) => media.id, { cascade: true, onDelete: "SET NULL" })
   @JoinColumn()
   media: Media;
 
   @RelationId((campaign: Campaign) => campaign.media)
   mediaId: number;
+
+  @Column({ type: 'varchar', length: 20, default: CampaignStatus.CREATED })
+  status: CampaignStatus;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.campaign, { cascade: true })
+  reservations: Reservation[];
 }

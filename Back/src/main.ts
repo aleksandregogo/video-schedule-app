@@ -8,8 +8,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UserModule } from './User/user.module';
 import { AuthModule } from './Auth/auth.module';
 import cookieParser from 'cookie-parser';
-import { ScheduleModule } from './Schedule/schedule.module';
 import { ScreenModule } from './Screen/screen.module';
+import { CampaignModule } from './Campaign/campaign.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log', 'error', 'warn', 'debug', 'verbose', 'fatal'] });
@@ -42,7 +42,7 @@ function createSwaggerDoc(app: INestApplication<any>) {
       include: [
         UserModule,
         AuthModule,
-        ScheduleModule,
+        CampaignModule,
         ScreenModule
       ],
     });

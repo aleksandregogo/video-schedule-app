@@ -21,3 +21,19 @@ export type CalendarEvent = {
   start: string;
   end: string;
 }
+
+export interface ScreenView {
+  id: number;
+  name: string;
+  status: ScreenStatus;
+  lat: number;
+  lng: number;
+  imageDownloadUrl?: string;
+  price: number;
+  companyId: number;
+}
+
+export enum ScreenStatus {
+  ON = 'ON',
+  OFF = 'OFF',
+}

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "@/styles/map.css";
-import { ScreenView } from "@/pages/screens";
+import { ScreenView } from "./types";
 
 interface ScreensMapViewProps {
   screens: ScreenView[];
