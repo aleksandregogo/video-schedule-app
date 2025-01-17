@@ -5,7 +5,7 @@ import { Tv, SwatchBook, ImagePlay, LogOut, SquareChartGantt } from "lucide-reac
 import { useAuth } from "@/contexts/authProvider";
 
 const Sidebar: React.FC = () => {
-  const { logout, isCompany } = useAuth();
+  const { user, isCompany, logout } = useAuth();
 
   return (
     <aside className="relative h-[100%] w-64 bg-gray-800 text-white">
@@ -31,28 +31,46 @@ const Sidebar: React.FC = () => {
             to="/reviews"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-4 px-3 py-2 rounded hover:bg-gray-700",
+                "relative flex items-center gap-4 px-3 py-2 rounded hover:bg-gray-700",
                 isActive ? "bg-gray-700" : ""
               )
             }
           >
             <SquareChartGantt className="w-5 h-5" />
             <span>Reviews</span>
+            {user.company?.campaignCount > 0 && (
+              <span
+                className={cn(
+                  "absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold"
+                )}
+              >
+                {user.company.campaignCount}
+              </span>
+            )}
           </NavLink> :
           <NavLink
             to="/campaigns"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-4 px-3 py-2 rounded hover:bg-gray-700",
+                "relative flex items-center gap-4 px-3 py-2 rounded hover:bg-gray-700",
                 isActive ? "bg-gray-700" : ""
               )
             }
           >
             <SwatchBook className="w-5 h-5" />
             <span>Campaigns</span>
+            {user?.campaignCount > 0 && (
+              <span
+                className={cn(
+                  "absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold"
+                )}
+              >
+                {user.campaignCount}
+              </span>
+            )}
           </NavLink>
         }
-        <NavLink
+        {/* <NavLink
           to="/media"
           className={({ isActive }) =>
             cn(
@@ -63,7 +81,7 @@ const Sidebar: React.FC = () => {
         >
           <ImagePlay className="w-5 h-5" />
           <span>Media</span>
-        </NavLink>
+        </NavLink> */}
       </nav>
       <div className="p-4 border-t border-gray-700">
         <NavLink
@@ -71,7 +89,7 @@ const Sidebar: React.FC = () => {
           onClick={logout}
           className={({ isActive }) =>
             cn(
-              "flex items-center gap-4 px-3 py-2 rounded hover:bg-gray-700",
+              "relative flex items-center gap-4 px-3 py-2 rounded hover:bg-gray-700",
               isActive ? "bg-gray-700" : ""
             )
           }

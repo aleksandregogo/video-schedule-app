@@ -79,54 +79,54 @@ const CampaignSubmitModal = ({
         {step === 0 ? (
           <div className="relative h-80 w-50 m-4">
             <h1 className="text-2xl font-bold p-2 mb-2">Upload media</h1>
-              {mediaUrl ? 
-                <>
-                  <video
-                    ref={videoRef}
-                    src={mediaUrl}
-                    onLoadedMetadata={() => {
-                      if (videoRef.current) {
-                        setVideoDuration(videoRef.current.duration);
-                      }
-                    }}
-                    controls
-                    className="bg-black w-full h-full"
-                  />
-                  {canEdit && <Button
-                    variant="destructive"
-                    onClick={onMediaDelete}
-                    className="my-2"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </Button>}
+            {mediaUrl ? 
+              <>
+                <video
+                  ref={videoRef}
+                  src={mediaUrl}
+                  onLoadedMetadata={() => {
+                    if (videoRef.current) {
+                      setVideoDuration(videoRef.current.duration);
+                    }
+                  }}
+                  controls
+                  className="bg-black w-full h-[50vh]"
+                />
+                {canEdit && <Button
+                  variant="destructive"
+                  onClick={onMediaDelete}
+                  className="my-2"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>}
 
-                  {videoDuration > 0 && canEdit && <>
-                    <p>
-                      Your media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
-                    </p>
-                    <p>Selected time slots will be corrected by this duration.</p>
-                    <div>
-                      <Label htmlFor="text-input"> Click continue to do so</Label>
-                      <Button variant="default" className="ml-2" onClick={handleDurationSubmit}>
-                        Submit
-                      </Button>
-                    </div>
-                  </>}
-                </> :
-                <div className="relative h-80 w-50 bg-gray-200 rounded-lg overflow-hidden">
-                  <button className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white">
-                    <FileUploader
-                      ownerId={campaign.id}
-                      uploadEndpoint="/campaign/media/upload-request"
-                      completeEndpoint="/campaign/media/upload-complete"
-                      onComplete={(mediaDownloadUrl) => setMediaUrl(mediaDownloadUrl)}
-                    >
-                      <Clapperboard className="w-6 h-6 mr-2" />
-                      Upload media
-                    </FileUploader>
-                  </button>
-                </div>
-              }
+                {videoDuration > 0 && canEdit && <>
+                  <p>
+                    Your media duration in seconds: <span className="text-lg font-semibold">{videoDuration.toFixed(1) || 0}</span>
+                  </p>
+                  <p>Selected time slots will be corrected by this duration.</p>
+                  <div>
+                    <Label htmlFor="text-input"> Click continue to do so</Label>
+                    <Button variant="default" className="ml-2" onClick={handleDurationSubmit}>
+                      Submit
+                    </Button>
+                  </div>
+                </>}
+              </> :
+              <div className="relative h-[50vh] w-50 bg-gray-200 rounded-lg overflow-hidden">
+                <button className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white">
+                  <FileUploader
+                    ownerId={campaign.id}
+                    uploadEndpoint="/campaign/media/upload-request"
+                    completeEndpoint="/campaign/media/upload-complete"
+                    onComplete={(mediaDownloadUrl) => setMediaUrl(mediaDownloadUrl)}
+                  >
+                    <Clapperboard className="w-6 h-6 mr-2" />
+                    Upload media
+                  </FileUploader>
+                </button>
+              </div>
+            }
           </div>
         ) : (
           <>

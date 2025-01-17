@@ -3,9 +3,11 @@ import { APIClient } from "@/services/APIClient";
 export interface UserInfo {
   id: number;
   name: string;
+  campaignCount?: number;
   company?: {
     id: number;
     name: string;
+    campaignCount?: number;
   };
 }
 

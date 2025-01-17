@@ -9,6 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/Entities/user.entity';
 import { CookieStrategy } from './Strategy/cookie.strategy';
+import { CampaignModule } from 'src/Campaign/campaign.module';
 
 
 @Module({
@@ -18,7 +19,8 @@ import { CookieStrategy } from './Strategy/cookie.strategy';
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '1d' },
     }),
     PassportModule.register({defaultStrategy: 'jwt'}),
-    TypeOrmModule.forFeature([User])
+    TypeOrmModule.forFeature([User]),
+    CampaignModule
   ],
   providers: [
     CookieStrategy,

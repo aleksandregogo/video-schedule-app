@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { CampaignService } from 'src/Campaign/campaign.service';
 import { User } from 'src/Entities/user.entity';
 import { AuthProvider, UserInfo } from 'src/User/Interface/UserInfoInterface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   generateJwt(
