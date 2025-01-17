@@ -8,13 +8,15 @@ import { SuccessResponseObjectDto } from "src/Response/SuccessResponseObject.dto
 import { UserPresentation } from "src/User/Presentation/user.presentation";
 import { ConfigService } from "@nestjs/config";
 import { ApiTags } from "@nestjs/swagger";
+import { CampaignService } from "src/Campaign/campaign.service";
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly campaignService: CampaignService
   ) {}
 
   @Get('google')
@@ -65,9 +67,11 @@ export class AuthController {
   @UseGuards(AuthGuard('cookie'))
   async getUser(@Req() req: Request) {
     const userInfo = req.user as UserInfo;
+    
+    const campaignCount = await this.campaignService.getCampaignsCount(userInfo);
 
     return new SuccessResponseObjectDto({
-      data: new UserPresentation().present(userInfo.user, userInfo.company)
+      data: new UserPresentation().present(userInfo.user, userInfo.company, campaignCount)
     })
   }
 

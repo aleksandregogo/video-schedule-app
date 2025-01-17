@@ -4,4 +4,5 @@ export class UserViewDto {
     id: number;
     name: string;
     company: CompanyViewDto;
+    campaignCount?: number;
 }

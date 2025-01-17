@@ -16,10 +16,10 @@ export class CookieStrategy extends PassportStrategy(Strategy, 'cookie') {
     super();
   }
 
-  async validate(req: Request): Promise<any> {
+  async validate(req: Request): Promise<UserInfo> {
     const token = req.cookies['auth_token'];
     if (!token) {
-      throw new UnauthorizedException('No token found in cookies');
+      throw new UnauthorizedException('Not Authorized');
     }
 
     try {

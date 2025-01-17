@@ -5,7 +5,7 @@ import { CompanyViewDto } from "./view/company.view.dto";
 
 
 export class UserPresentation {
-    public present(user: User, company: Company): UserViewDto {
+    public present(user: User, company: Company, campaignCount: number): UserViewDto {
         const userView = new UserViewDto();
         userView.id = user.id;
         userView.name = user.name;
@@ -15,7 +15,11 @@ export class UserPresentation {
             companyView.id = company.id;
             companyView.name = company.name;
 
+            companyView.campaignCount = campaignCount;
+
             userView.company = companyView;
+        } else {
+            userView.campaignCount = campaignCount;
         }
         return userView;
     }

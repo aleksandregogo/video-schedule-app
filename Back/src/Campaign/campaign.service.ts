@@ -187,6 +187,24 @@ export class CampaignService {
     }
   }
 
+  async getCampaignsCount(userInfo: UserInfo): Promise<number> {
+    const where = {
+      status: userInfo.company ? CampaignStatus.PENDING : CampaignStatus.CREATED
+    };
+
+    if (userInfo.company) {
+      where['company'] = { id: Equal(userInfo.company.id) };
+    } else {
+      where['user'] = { id: Equal(userInfo.userLocalId) };
+    }
+
+    return await this.campaignRepository.count({ where })
+    .catch((err) => {
+      console.error("Error in getAllCampaigns", err);
+      return 0;
+    })
+  }
+
   async getAllCampaigns(user: User): Promise<Campaign[]> {
     return await this.campaignRepository.find({
       where: {
