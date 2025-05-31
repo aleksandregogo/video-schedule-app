@@ -1,4 +1,4 @@
-# Project MVP: Dynamic Content & Campaign Management System
+# Dynamic Content & Campaign Management System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) <!-- Replace with your actual license if different -->
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -7,7 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-Project MVP is a full-stack application designed for managing and displaying dynamic content on screens, potentially for advertising campaigns or informational displays. It features a web interface for administration and a robust backend system that communicates with remote display units.
+Full-stack application designed for managing and displaying dynamic content on screens, potentially for advertising campaigns or informational displays. It features a web interface for administration and a robust backend system that communicates with remote display units.
 
 ## ✨ Key Features
 
@@ -40,7 +40,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 1.  **Clone the repository:**
     ```bash
     git clone <your-repository-url>
-    cd project-mvp
+    cd video-schedule-app
     ```
 
 2.  **Set up Environment Variables:**
@@ -53,7 +53,7 @@ Follow these instructions to get a copy of the project up and running on your lo
         *   `DATABASE_PORT`: `5432`
         *   `DATABASE_USER`: (e.g., `kukumala`)
         *   `DATABASE_PASSWORD`: (e.g., `abduljabarkhani`)
-        *   `DATABASE_NAME`: (e.g., `mvp-db`)
+        *   `DATABASE_NAME`: (e.g., `db`)
         *   `TCP_HOST`: `0.0.0.0`
         *   `TCP_PORT`: `3033`
     *   **Frontend Service (`frontend`):**
